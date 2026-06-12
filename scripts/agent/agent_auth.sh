@@ -104,6 +104,27 @@ ensure_valid_token_with_refresh() {
     return 1
 }
 
+# Gate de sesión propio de turia: garantiza una sesión válida o fuerza login.
+#   - Si hay token válido (o caducado pero renovable) → 0 sin molestar.
+#   - Si caducó y no se pudo renovar → limpia tokens y lanza login bloqueante.
+#   - Si no hay sesión → lanza login bloqueante.
+# Devuelve 0 si al terminar hay sesión válida; 1 si el login falló o se canceló.
+ensure_agent_login() {
+    init_agent_config
+
+    if is_agent_authenticated; then
+        if ensure_valid_token_with_refresh; then
+            return 0
+        fi
+        # Token caducado e irrecuperable: limpiar para forzar login limpio.
+        set_agent_config "access_token" "null"
+        set_agent_config "refresh_token" "null"
+    fi
+
+    echo -e "${YELLOW}No hay sesion activa. Iniciando login...${NC}" >&2
+    agent_login
+}
+
 # ============================================================================
 # LOGIN / LOGOUT
 # ============================================================================

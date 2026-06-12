@@ -93,6 +93,13 @@ launch_claude_with_skills() {
     exit 1
   fi
 
+  # Gate de usuario: forzar sesión válida antes de continuar (bloquea).
+  if ! ensure_agent_login; then
+    echo -e "${RED}Login requerido para usar turia. Abortando.${NC}"
+    exit 1
+  fi
+  echo
+
   echo -e "${DIM}Analizando $(pwd)…${NC}\n"
 
   local types

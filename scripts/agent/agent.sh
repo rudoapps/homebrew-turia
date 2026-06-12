@@ -191,23 +191,10 @@ agent_command() {
             generate_project_context | python3 -m json.tool
             ;;
         rag)
-            # Verificar autenticacion antes de consultar RAG
-            init_agent_config
-            if is_agent_authenticated; then
-                if ! ensure_valid_token_with_refresh; then
-                    echo -e "${YELLOW}Tu sesion ha expirado y no se pudo renovar.${NC}"
-                    echo ""
-                    set_agent_config "access_token" "null"
-                    set_agent_config "refresh_token" "null"
-                fi
-            fi
-
-            if ! is_agent_authenticated; then
-                echo -e "${YELLOW}No hay sesion activa. Iniciando login...${NC}"
-                if ! agent_login; then
-                    echo -e "${RED}Login fallido. No se puede consultar RAG.${NC}"
-                    return 1
-                fi
+            # Verificar autenticacion antes de consultar RAG (gate propio de turia)
+            if ! ensure_agent_login; then
+                echo -e "${RED}Login fallido. No se puede consultar RAG.${NC}"
+                return 1
             fi
 
             # Mostrar estado de RAG para el proyecto actual
