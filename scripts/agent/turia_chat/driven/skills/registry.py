@@ -7,7 +7,7 @@ Stored as `~/.config/turia-agent/installed.json`. Tracks:
       "<name>": {"url": "...", "commit": "<sha>"}
     },
     "packs": {
-      "<pack>": {"marketplace": "<name>", "source_path": "anturiar", "commit": "<sha>"}
+      "<pack>": {"marketplace": "<name>", "source_path": "angular", "commit": "<sha>"}
     }
   }
 """

@@ -30,7 +30,7 @@ def test_spinner_is_running_is_property():
     attr = getattr(Spinner, "is_running", None)
     assert isinstance(attr, property), (
         f"Spinner.is_running should be a @property, got {type(attr).__name__}. "
-        "If it was changed to a returiar method, update ALL callers to add () "
+        "If it was changed to a regular method, update ALL callers to add () "
         "— or better, keep it as a @property for consistency."
     )
 

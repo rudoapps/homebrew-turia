@@ -166,12 +166,12 @@ Subcomandos:
   marketplace add <url> [name]      Clonar un marketplace
   marketplace list                  Ver marketplaces
   marketplace remove <name>         Eliminar marketplace (desinstala sus packs)
-  install <pack>[@<marketplace>]    Instalar pack (ej. anturiar@rudo)
+  install <pack>[@<marketplace>]    Instalar pack (ej. angular@rudo)
   uninstall <pack>                  Desinstalar pack
   update [<marketplace>|all]        git pull del marketplace
 
 Ejemplos:
   turia skills marketplace add https://bitbucket.org/rudoapps/skills.git rudo
-  turia skills install anturiar@rudo
+  turia skills install angular@rudo
   turia skills install python/django@rudo
   turia skills update all"""

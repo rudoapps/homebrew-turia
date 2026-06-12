@@ -35,8 +35,8 @@ detect_claude_project_types() {
   if [ -f pubspec.yaml ]; then
     types+=("flutter")
   fi
-  # TypeScript / Anturiar / JS
-  if [ -f anturiar.json ] || [ -f tsconfig.json ] \
+  # TypeScript / Angular / JS
+  if [ -f angular.json ] || [ -f tsconfig.json ] \
      || { [ -f package.json ] && compgen -G "*.ts" >/dev/null; }; then
     types+=("typescript")
   fi

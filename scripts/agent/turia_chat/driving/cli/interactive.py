@@ -430,7 +430,7 @@ class InteractiveHandler:
 
                 continue
 
-            # Returiar message — send to agent
+            # Regular message — send to agent
             await self._send_message(user_input)
 
             # Check for new broadcast messages between turns
@@ -874,7 +874,7 @@ class InteractiveHandler:
             )
             self._console.print()
 
-        # Send the expanded prompt as a returiar message
+        # Send the expanded prompt as a regular message
         await self._send_message(
             resolution.expanded_prompt,
             system_prompt_addition=resolution.system_prompt_addition,

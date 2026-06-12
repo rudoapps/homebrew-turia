@@ -25,7 +25,7 @@ class Skill:
             (SKILL.md style). Used to expand ${CLAUDE_SKILL_DIR} /
             ${TURIA_SKILL_DIR} at resolve time so skills can reference
             bundled resources.
-        pack: Marketplace pack this skill belongs to (e.g. "anturiar").
+        pack: Marketplace pack this skill belongs to (e.g. "angular").
             Enables `pack:skill` namespacing when slugs collide.
     """
 
