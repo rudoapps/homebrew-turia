@@ -1,8 +1,8 @@
 class Turia < Formula
   desc "CLI para desarrollo móvil"
-  homepage "https://github.com/rudoapps/turia"
+  homepage "https://github.com/rudoapps/homebrew-turia"
   url "https://github.com/rudoapps/homebrew-turia/archive/refs/tags/v0.0.1.tar.gz"
-  sha256 "PENDIENTE_PRIMER_RELEASE"  # rellenar con el sha256 del tarball del primer tag
+  sha256 "3e8733f555cebcf1ed9a0c664456713ebea1c8dec5264da8d4c8239d3359e7f4"
   license "MIT"
 
   depends_on "jq"
