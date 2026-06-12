@@ -1,0 +1,6 @@
+import '../remote/dto/{{PARAM_NAME}}_response_dto.dart';
+
+abstract interface class {{TEMPLATE_NAME}}RemoteDataSource {
+  Future<{{TEMPLATE_NAME}}ResponseDto> fetch{{TEMPLATE_NAME}}();
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}ResponseDto dto});
+}

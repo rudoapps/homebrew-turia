@@ -1,0 +1,11 @@
+class {{TEMPLATE_NAME}}UseCases {
+    private let repository: {{TEMPLATE_NAME}}RepositoryProtocol
+
+    init(repository: {{TEMPLATE_NAME}}RepositoryProtocol) {
+        self.repository = repository
+    }
+
+    func get{{TEMPLATE_NAME}}s() async throws -> [{{TEMPLATE_NAME}}] {
+        return try await repository.get{{TEMPLATE_NAME}}s()
+    }
+}

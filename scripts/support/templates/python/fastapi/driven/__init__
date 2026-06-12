@@ -1,0 +1,6 @@
+"""
+Adaptadores Driven (salida)
+
+Implementaciones concretas de los puertos driven.
+Incluye adaptadores para bases de datos, servicios externos, sistemas de mensajería, etc.
+"""

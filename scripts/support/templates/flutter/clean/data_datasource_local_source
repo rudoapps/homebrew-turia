@@ -1,0 +1,7 @@
+import '../local/dbo/{{PARAM_NAME}}_dbo.dart';
+
+abstract interface class {{TEMPLATE_NAME}}LocalDataSource {
+  Future<{{TEMPLATE_NAME}}Dbo?> fetch{{TEMPLATE_NAME}}();
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}Dbo dbo});
+  Future<void> clear{{TEMPLATE_NAME}}();
+}

@@ -1,0 +1,47 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+
+
+class {{TEMPLATE_NAME}}RepositoryPort(ABC):
+    """Puerto de salida para el repositorio de {{TEMPLATE_NAME}} (Driven Port)"""
+    
+    @abstractmethod
+    async def create(self, {{PARAM_NAME}}: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}:
+        """Crea un nuevo {{PARAM_NAME}} en la base de datos"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_by_id(self, {{PARAM_NAME}}_id: int) -> Optional[{{TEMPLATE_NAME}}]:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def update(self, {{PARAM_NAME}}: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def delete(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Elimina un {{PARAM_NAME}} por ID"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def search_by_name(self, name_pattern: str) -> List[{{TEMPLATE_NAME}}]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def exists_by_id(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Verifica si existe un {{PARAM_NAME}} por ID"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def count(self) -> int:
+        """Cuenta el total de {{PARAM_NAME}}s"""
+        raise NotImplementedError

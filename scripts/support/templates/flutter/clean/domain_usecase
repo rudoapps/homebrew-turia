@@ -1,0 +1,13 @@
+import '../../entities/{{PARAM_NAME}}/{{PARAM_NAME}}_entity.dart';
+import '../../repositories/{{PARAM_NAME}}/{{PARAM_NAME}}_repository.dart';
+
+class {{TEMPLATE_NAME}}UseCase {
+  final {{TEMPLATE_NAME}}Repository _repository;
+
+  {{TEMPLATE_NAME}}UseCase({required {{TEMPLATE_NAME}}Repository repository})
+      : _repository = repository;
+
+  Future<{{TEMPLATE_NAME}}Entity> call() async {
+    return await _repository.get{{TEMPLATE_NAME}}();
+  }
+}

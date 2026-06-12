@@ -1,0 +1,14 @@
+import javax.inject.Inject
+
+class {{TEMPLATE_NAME}}RepositoryImpl @Inject constructor(
+    private val remoteDataSource: {{TEMPLATE_NAME}}RemoteDataSource
+) : {{TEMPLATE_NAME}}Repository {
+    
+    override suspend fun getAll{{TEMPLATE_NAME}}s(): List<{{TEMPLATE_NAME}}> {
+        return try {
+            remoteDataSource.getAll{{TEMPLATE_NAME}}s().map { it.toDomain() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+}

@@ -1,0 +1,11 @@
+from typing import List
+from sqlalchemy.orm import Session
+from models.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+
+
+class {{TEMPLATE_NAME}}Repository:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_all(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}]:
+        return self.db.query({{TEMPLATE_NAME}}).offset(skip).limit(limit).all()

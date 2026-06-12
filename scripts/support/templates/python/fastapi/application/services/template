@@ -1,0 +1,75 @@
+from typing import List, Optional
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+from application.ports.driven.db.{{PARAM_NAME}}.repository_port import {{TEMPLATE_NAME}}RepositoryPort
+
+
+class {{TEMPLATE_NAME}}Service:
+    """Servicio de aplicación para {{TEMPLATE_NAME}}"""
+    
+    def __init__(self, {{PARAM_NAME}}_repository: {{TEMPLATE_NAME}}RepositoryPort):
+        self._{{PARAM_NAME}}_repository = {{PARAM_NAME}}_repository
+    
+    async def create_{{PARAM_NAME}}(self, name: str) -> {{TEMPLATE_NAME}}:
+        """Crea un nuevo {{PARAM_NAME}}"""
+        # Crear entidad de dominio
+        {{PARAM_NAME}} = {{TEMPLATE_NAME}}(name=name)
+        
+        # Validar reglas de negocio
+        {{PARAM_NAME}}.validate_business_rules()
+        
+        # Persistir a través del puerto
+        return await self._{{PARAM_NAME}}_repository.create({{PARAM_NAME}})
+    
+    async def get_{{PARAM_NAME}}_by_id(self, {{PARAM_NAME}}_id: int) -> Optional[{{TEMPLATE_NAME}}]:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        if {{PARAM_NAME}}_id <= 0:
+            raise ValueError("El ID del {{PARAM_NAME}} debe ser mayor que 0")
+        
+        return await self._{{PARAM_NAME}}_repository.get_by_id({{PARAM_NAME}}_id)
+    
+    async def get_all_{{PARAM_NAME}}s(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        if skip < 0:
+            raise ValueError("El parámetro skip no puede ser negativo")
+        if limit <= 0 or limit > 1000:
+            raise ValueError("El parámetro limit debe estar entre 1 y 1000")
+        
+        return await self._{{PARAM_NAME}}_repository.get_all(skip=skip, limit=limit)
+    
+    async def update_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int, name: str) -> Optional[{{TEMPLATE_NAME}}]:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        # Verificar que existe
+        existing_{{PARAM_NAME}} = await self.get_{{PARAM_NAME}}_by_id({{PARAM_NAME}}_id)
+        if not existing_{{PARAM_NAME}}:
+            return None
+        
+        # Crear entidad actualizada
+        updated_{{PARAM_NAME}} = {{TEMPLATE_NAME}}(
+            id={{PARAM_NAME}}_id,
+            name=name,
+            created_at=existing_{{PARAM_NAME}}.created_at
+        )
+        
+        # Validar reglas de negocio
+        updated_{{PARAM_NAME}}.validate_business_rules()
+        
+        return await self._{{PARAM_NAME}}_repository.update(updated_{{PARAM_NAME}})
+    
+    async def delete_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Elimina un {{PARAM_NAME}}"""
+        if {{PARAM_NAME}}_id <= 0:
+            raise ValueError("El ID del {{PARAM_NAME}} debe ser mayor que 0")
+        
+        # Verificar que existe antes de eliminar
+        existing_{{PARAM_NAME}} = await self.get_{{PARAM_NAME}}_by_id({{PARAM_NAME}}_id)
+        if not existing_{{PARAM_NAME}}:
+            return False
+        
+        return await self._{{PARAM_NAME}}_repository.delete({{PARAM_NAME}}_id)
+    
+    async def search_{{PARAM_NAME}}s_by_name(self, name_pattern: str) -> List[{{TEMPLATE_NAME}}]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        if not name_pattern or len(name_pattern.strip()) == 0:
+            raise ValueError("El patrón de búsqueda no puede estar vacío")
+        
+        return await self._{{PARAM_NAME}}_repository.search_by_name(name_pattern.strip())

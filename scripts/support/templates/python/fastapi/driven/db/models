@@ -1,0 +1,36 @@
+from django.db import models
+
+
+class {{TEMPLATE_NAME}}DBO(models.Model):
+    """Modelo de base de datos para {{TEMPLATE_NAME}} (Database Object)"""
+    
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(
+        max_length=100,
+        verbose_name="Nombre",
+        help_text="Nombre del {{PARAM_NAME}}"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de creación"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Fecha de actualización"
+    )
+    
+    class Meta:
+        db_table = "{{PARAM_NAME}}s"
+        verbose_name = "{{TEMPLATE_NAME}}"
+        verbose_name_plural = "{{TEMPLATE_NAME}}s"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["name"]),
+            models.Index(fields=["-created_at"]),
+        ]
+    
+    def __str__(self):
+        return f"{{TEMPLATE_NAME}}(id={self.id}, name='{self.name}')"
+    
+    def __repr__(self):
+        return f"<{{TEMPLATE_NAME}}DBO(id={self.id}, name='{self.name}')>"

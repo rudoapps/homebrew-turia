@@ -1,0 +1,907 @@
+#!/bin/bash
+
+# Detectar si se usa --json antes de mostrar cualquier output
+JSON_OUTPUT="false"
+for arg in "$@"; do
+  if [ "$arg" = "--json" ]; then
+    JSON_OUTPUT="true"
+    break
+  fi
+done
+export JSON_OUTPUT
+
+HOMEBREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/usr/local")
+
+# Detectar si estamos en Homebrew o desarrollo local
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Buscar scripts en orden de prioridad
+if [ -d "$SCRIPT_DIR/scripts" ]; then
+    # Desarrollo local - scripts junto al ejecutable
+    scripts_dir="$SCRIPT_DIR/scripts"
+elif [ -d "$HOMEBREW_PREFIX/opt/turia/scripts" ]; then
+    # Instalación Homebrew (via opt symlink)
+    scripts_dir="$HOMEBREW_PREFIX/opt/turia/scripts"
+else
+    echo "Error: No se encontró el directorio de scripts"
+    echo "Buscado en:"
+    echo "  - $SCRIPT_DIR/scripts (desarrollo)"
+    echo "  - $HOMEBREW_PREFIX/opt/turia/scripts (homebrew)"
+    echo ""
+    echo "Si instalaste via Homebrew, intenta: brew reinstall turia"
+    exit 1
+fi
+
+source "$scripts_dir/global_vars.sh"
+
+# Solo mostrar logo y mensajes si no está en modo JSON
+if [ "$JSON_OUTPUT" != "true" ]; then
+  source "$scripts_dir/support/logo.sh"
+  echo -e "  ${DIM}v${VERSION}${NC}"
+fi
+
+source "$scripts_dir/android/android.sh"
+source "$scripts_dir/android/android_support.sh"
+source "$scripts_dir/android/android_create_new_project.sh"
+source "$scripts_dir/android/android_template.sh"
+source "$scripts_dir/ios/ios.sh"
+source "$scripts_dir/ios/ios_support.sh"
+source "$scripts_dir/ios/ios_template.sh"
+source "$scripts_dir/ios/ios_create_new_project.sh"
+source "$scripts_dir/flutter/flutter.sh"
+source "$scripts_dir/flutter/flutter_support.sh"
+source "$scripts_dir/flutter/flutter_create_new_project.sh"
+source "$scripts_dir/flutter/flutter_template.sh"
+source "$scripts_dir/python/python.sh"
+source "$scripts_dir/python/python_create_project.sh"
+source "$scripts_dir/python/python_template.sh"
+source "$scripts_dir/support/general_support.sh"
+
+# Force reload list_branches to ensure we have the latest version
+unset -f list_branches 2>/dev/null
+source "$scripts_dir/support/general_support.sh"
+source "$scripts_dir/support/git.sh"
+source "$scripts_dir/support/network.sh"
+source "$scripts_dir/support/os.sh"
+source "$scripts_dir/support/validation.sh"
+source "$scripts_dir/support/bitbucket_repo.sh"
+source "$scripts_dir/support/claude_launcher.sh"
+source "$scripts_dir/agent/agent.sh"
+
+# list_branches function loaded from general_support.sh
+
+if [ "$JSON_OUTPUT" != "true" ]; then
+  check_version
+fi
+
+# Inicializar variables
+LIST_TEMPLATES="false"
+TEMPLATE_TYPE=""
+ARCHETYPE_TYPE=""
+FORCE_INSTALL="false"
+BATCH_MODE="false"
+INTEGRATE_MODE="false"
+INSTALL_MODE_SELECTED="false"  # Indica si el usuario ya eligió modo vía flag
+MODULE_NAMES=()
+BB_USER=""
+BB_TOKEN=""
+BB_WORKSPACE=""
+BB_REPO=""
+BB_PRIVATE="true"
+export FORCE_INSTALL
+export BATCH_MODE
+export INTEGRATE_MODE
+export INSTALL_MODE_SELECTED
+
+function cleanup {
+    echo ""
+    echo -e "${YELLOW}🧹 Ejecutando limpieza...${NC}"
+    remove_temporary_dir
+}
+
+function cleanup_on_exit {
+    # Limpieza sin exit para evitar loop infinito
+    if [ -d "$TEMPORARY_DIR" ]; then
+        rm -rf "$TEMPORARY_DIR"
+    fi
+    
+    # Limpiar directorio temp-turia si existe
+    if [ -d "temp-turia" ]; then
+        echo -e "🗑️ Eliminando directorio temp-turia..."
+        rm -rf "temp-turia"
+    fi
+    
+    # Limpiar cualquier directorio temporal relacionado con arquetipo
+    for temp_dir in temp-archetype architecture-* temp-*; do
+        if [ -d "$temp_dir" ]; then
+            rm -rf "$temp_dir"
+        fi
+    done
+}
+
+# Asociar señales con las funciones de limpieza
+trap cleanup SIGINT SIGTERM
+trap cleanup_on_exit EXIT
+
+install_module() {
+  if check_type_of_project; then
+    type=0
+  else
+    type=$?
+  fi
+
+  # Validar que --integrate solo se use con iOS
+  if [ "$INTEGRATE_MODE" == "true" ] && [ "$type" != "1" ]; then
+    echo -e "${RED}Error: La opción --integrate solo está disponible para proyectos iOS.${NC}"
+    echo -e "${YELLOW}Para proyectos Android, Flutter o Python, usa el modo por defecto (--module).${NC}"
+    exit 1
+  fi
+
+  if [ "$BATCH_MODE" = "true" ]; then
+    # Modo batch: instalar múltiples módulos
+    case "$type" in
+      0) echo -e "${GREEN}Te encuentras en un proyecto Android${NC}"; install_android_modules_batch ;;
+      1) echo -e "${GREEN}Te encuentras en un proyecto IOS${NC}";     install_ios_modules_batch ;;
+      2) echo -e "${GREEN}Te encuentras en un proyecto Flutter${NC}";  install_flutter_modules_batch ;;
+      3) echo -e "${GREEN}Te encuentras en un proyecto Python${NC}";   install_python_modules_batch ;;
+      *) echo -e "${RED}Error: No te encuentras en un proyecto válido.${NC}"; exit 1 ;;
+    esac
+  else
+    # Modo individual: instalar un solo módulo
+    case "$type" in
+      0) echo -e "${GREEN}Te encuentras en un proyecto Android${NC}"; install_android_module ;;
+      1) echo -e "${GREEN}Te encuentras en un proyecto IOS${NC}";     install_ios_module ;;
+      2) echo -e "${GREEN}Te encuentras en un proyecto Flutter${NC}";  install_flutter_module ;;
+      3) echo -e "${GREEN}Te encuentras en un proyecto Python${NC}";   install_python_module ;;
+      *) echo -e "${RED}Error: No te encuentras en un proyecto válido.${NC}"; exit 1 ;;
+    esac
+  fi
+}
+
+show_help() {
+  echo ""
+  echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+  echo -e "${BOLD}                    TURIA - AYUDA                 ${NC}"
+  echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${BOLD}DESCRIPCIÓN:${NC}"
+  echo "  Herramienta CLI para acelerar el desarrollo con arquetípicos y módulos"
+  echo "  predefinidos. Soporta proyectos Android, iOS, Flutter y Python."
+  echo ""
+  echo -e "${BOLD}USO:${NC}"
+  echo "  turia <comando> [opciones]"
+  echo ""
+  echo -e "${BOLD}COMANDOS PRINCIPALES:${NC}"
+  echo ""
+  echo -e "${BOLD}  ai${NC}       Inicia el agente AI (modo Python)"
+  echo -e "${BOLD}  chat${NC}     Inicia conversacion con el agente AI (modo bash)"
+  echo -e "${BOLD}  skills${NC}   Gestiona skills del agente (install/uninstall/update)"
+  echo -e "${BOLD}  login${NC}    Inicia sesion en el agente AI"
+  echo -e "${BOLD}  setup${NC}    Instala dependencias del agente AI"
+  echo -e "${BOLD}  list${NC}     Lista módulos disponibles para el proyecto actual"
+  echo -e "${BOLD}  install${NC}  Instala un módulo específico en el proyecto actual"
+  echo -e "${BOLD}  create${NC}   Crea un nuevo proyecto con arquitectura predefinida"
+  echo -e "${BOLD}  template${NC} Genera templates con arquitecturas predefinidas"
+  echo -e "${BOLD}  branches${NC} Lista ramas disponibles en repositorios de módulos o arquetipos"
+  echo -e "${BOLD}  status${NC}   Muestra el estado del proyecto y módulos instalados"
+  echo -e "${BOLD}  validate${NC} Valida archivos configuration.turia del proyecto"
+  echo -e "${BOLD}  install-hook${NC} Instala pre-commit hook para validar configuration.turia"
+  echo -e "${BOLD}  help${NC}     Muestra esta ayuda"
+  echo ""
+  echo -e "${BOLD}OPCIONES GLOBALES:${NC}"
+  echo ""
+  echo -e "${BOLD}  --key=XXXX${NC}      Clave de acceso para repositorios privados (requerida para install/list/create/branches)"
+  echo -e "${BOLD}  --branch=YYYY${NC}    Rama específica del repositorio (opcional para install/list/create)"
+  echo -e "${BOLD}  --type=ZZZZ${NC}     Tipo de template: clean|fastapi (para template)"
+  echo -e "${BOLD}  --archetype=ZZZZ${NC} Plataforma de arquetipos: android|ios|flutter|python (para branches)"
+  echo -e "${BOLD}  --force${NC}         Forzar reinstalación sin confirmar (para install)"
+  echo -e "${BOLD}  --module${NC}        Instalar como módulo completo sin preguntar (modo por defecto)"
+  echo -e "${BOLD}  --integrate${NC}     [Solo iOS] Integrar en estructura existente (data→data, domain→domain, etc.)"
+  echo -e "${BOLD}  --list${NC}          Lista todos los templates disponibles (para template)"
+  echo -e "${BOLD}  --bb-user=XXXX${NC}   Usuario de Bitbucket (requerido con --bb-token)"
+  echo -e "${BOLD}  --bb-token=XXXX${NC}  App Password de Bitbucket (activa creación de repo + push tras create)"
+  echo -e "${BOLD}  --bb-workspace=X${NC} Workspace de Bitbucket (requerido con --bb-token)"
+  echo -e "${BOLD}  --bb-repo=XXXX${NC}  Nombre del repo en Bitbucket (opcional, usa nombre del proyecto)"
+  echo -e "${BOLD}  --bb-public${NC}     Crear repo público (por defecto es privado)"
+  echo -e "${BOLD}  --help, -h${NC}      Muestra esta ayuda"
+  echo ""
+  echo -e "${BOLD}EJEMPLOS DE USO:${NC}"
+  echo ""
+  echo -e "${BOLD}  Listar módulos disponibles:${NC}"
+  echo "  turia list --key=mi_clave_secreta"
+  echo "  turia list --key=mi_clave --branch=development"
+  echo ""
+  echo -e "${BOLD}  Instalar uno o más módulos:${NC}"
+  echo "  turia install authentication --key=mi_clave_secreta"
+  echo "  turia install network --key=mi_clave --branch=feature-branch"
+  echo "  turia install network --key=mi_clave --tag=v1.0.0"
+  echo "  turia install authentication --key=mi_clave --force     # Reinstalar sin confirmar"
+  echo "  turia install authentication --key=mi_clave --module    # Módulo completo (sin preguntar)"
+  echo "  turia install authentication --key=mi_clave --integrate # [iOS] Integrar en capas"
+  echo ""
+  echo -e "${BOLD}  Instalar múltiples módulos (batch):${NC}"
+  echo "  turia install login,wallet,payments --key=mi_clave_secreta"
+  echo "  turia install network,auth,database --key=mi_clave --branch=develop"
+  echo "  turia install user,product,order --key=mi_clave --tag=v2.0.0"
+  echo "  ${YELLOW}# Nota: En modo batch, el repositorio se clona una sola vez${NC}"
+  echo "  ${YELLOW}# Flutter ejecuta pub get y build_runner solo al final${NC}"
+  echo ""
+  echo -e "${BOLD}  Crear nuevos proyectos:${NC}"
+  echo "  turia create android --key=mi_clave_secreta"
+  echo "  turia create flutter --key=mi_clave_secreta"
+  echo "  turia create ios --key=mi_clave_secreta"
+  echo "  turia create python --key=mi_clave_secreta"
+  echo ""
+  echo -e "${BOLD}  Crear proyecto + repo en Bitbucket:${NC}"
+  echo "  turia create flutter --key=mi_clave --bb-user=mi_user --bb-token=APP_PWD --bb-workspace=rudoapps"
+  echo "  turia create python --key=mi_clave --bb-user=mi_user --bb-token=APP_PWD --bb-workspace=rudoapps --bb-repo=mi-api"
+  echo "  turia create ios --key=mi_clave --bb-user=mi_user --bb-token=APP_PWD --bb-workspace=rudoapps --bb-public"
+  echo ""
+  echo -e "${BOLD}  Generar templates:${NC}"
+  echo "  turia template user"
+  echo "  turia template product --type=clean"
+  echo "  turia template user,product,order    # Múltiples templates"
+  echo "  turia template --list               # Ver todos los templates disponibles"
+  echo ""
+  echo -e "${BOLD}  Listar ramas disponibles:${NC}"
+  echo "  turia branches --key=mi_clave                    # Auto-detecta el tipo de proyecto"
+  echo "  turia branches --key=mi_clave --archetype=flutter # Para consultar arquetipos"
+  echo ""
+  echo -e "${BOLD}  Ver estado del proyecto:${NC}"
+  echo "  turia status                                     # Muestra módulos instalados y logs"
+  echo ""
+  echo -e "${BOLD}  Validar configuration.turia:${NC}"
+  echo "  turia validate                                   # Valida todos los configuration.turia del proyecto"
+  echo "  turia validate --staged                          # Valida solo los archivos en staging (pre-commit)"
+  echo ""
+  echo -e "${BOLD}  Instalar pre-commit hook:${NC}"
+  echo "  turia install-hook                               # Instala hook para validar en cada commit"
+  echo ""
+  echo -e "${BOLD}  Usar el agente AI:${NC}"
+  echo "  turia setup                                      # Instalar dependencias del agente"
+  echo "  turia login                                      # Iniciar sesion"
+  echo "  turia ai                                         # Agente AI (modo Python)"
+  echo "  turia ai \"Hola\"                                  # Mensaje unico (Python)"
+  echo "  turia chat                                       # Modo interactivo (bash)"
+  echo "  turia chat \"Hola\"                                # Mensaje unico"
+  echo "  turia chat --continue                            # Continuar ultima conversacion"
+  echo "  turia skills marketplace add <url> <nombre>      # Clonar marketplace"
+  echo "  turia skills install <pack>[@<mp>]               # Instalar pack de skills"
+  echo "  turia skills list                                # Listar skills cargados"
+  echo ""
+  echo -e "${BOLD}TIPOS DE PROYECTO SOPORTADOS:${NC}"
+  echo ""
+  echo -e "${BOLD}  📱 Android${NC}   - Proyectos nativos Android con Clean Architecture"
+  echo -e "${BOLD}  🍎 iOS${NC}       - Proyectos nativos iOS con Clean Architecture"
+  echo -e "${BOLD}  🦋 Flutter${NC}   - Aplicaciones multiplataforma Flutter"
+  echo -e "${BOLD}  🐍 Python${NC}    - APIs backend con FastAPI o Django"
+  echo ""
+  echo -e "${BOLD}ARQUITECTURAS DISPONIBLES:${NC}"
+  echo ""
+  echo -e "${BOLD}  📱 Android & iOS${NC}     - Clean Architecture (Repository, UseCase, ViewModel)"
+  echo -e "${BOLD}  🦋 Flutter${NC}           - Clean Architecture (BLoC, Repository, UseCase)"
+  echo -e "${BOLD}  🐍 Python${NC}            - Arquitectura Hexagonal (Adaptadores y Puertos)"
+  echo ""
+  echo -e "${BOLD}NOTAS:${NC}"
+  echo ""
+  echo "  • ${BOLD}template${NC}: No requiere --key (usa templates locales)"
+  echo "  • ${BOLD}install/list${NC}: Requiere --key para acceder a repositorios privados"
+  echo "  • ${BOLD}create${NC}: Requiere --key para descargar arquetipos"
+  echo "  • ${BOLD}validate${NC}: Valida archivos configuration.turia del proyecto"
+  echo "  • ${BOLD}install-hook${NC}: Instala pre-commit hook para validación automática"
+  echo "  • La opción --branch permite usar ramas específicas en install/list/create"
+  echo "  • La opción --force permite reinstalar módulos sin confirmación"
+  echo "  • Los comandos list/install detectan automáticamente el tipo de proyecto actual"
+  echo "  • El comando create requiere especificar la plataforma (android/ios/flutter/python)"
+  echo "  • Todas las operaciones se registran en el archivo .turia.log (formato JSON)"
+  echo "  • Use 'turia status' para ver el historial de operaciones y módulos instalados"
+  echo ""
+  echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+}
+
+help_modules() {
+  show_help
+}
+
+list_modules() {
+  if check_type_of_project; then
+    type=0
+  else
+    type=$?
+  fi
+
+  case "$type" in
+    0) echo -e "${GREEN}Te encuentras en un proyecto Android${NC}"; list_android ;;
+    1) echo -e "${GREEN}Te encuentras en un proyecto IOS${NC}";     list_ios ;;
+    2) echo -e "${GREEN}Te encuentras en un proyecto Flutter${NC}";  list_flutter ;;
+    3) echo -e "${GREEN}Te encuentras en un proyecto Python${NC}";   list_python ;;
+    *) echo -e "${RED}Error: No te encuentras en un proyecto válido.${NC}"; exit 1 ;;
+  esac
+}
+
+list_templates() {
+  if [ "$LIST_TEMPLATES" = "true" ]; then
+    echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+    echo -e "${BOLD}           TEMPLATES DISPONIBLES                ${NC}"
+    echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${BOLD}📱 Android:${NC}"
+    echo "  • clean - Clean Architecture (Repository, UseCase, ViewModel)"
+    echo ""
+    echo -e "${BOLD}🍎 iOS:${NC}"
+    echo "  • clean - Clean Architecture (SwiftUI + Repository + UseCase)"
+    echo ""
+    echo -e "${BOLD}🦋 Flutter:${NC}"
+    echo "  • clean - Clean Architecture (BLoC + Repository + UseCase)"
+    echo ""
+    echo -e "${BOLD}🐍 Python:${NC}"
+    echo "  • fastapi - Arquitectura Hexagonal (Adaptadores y Puertos Driven/Driving)"
+    echo ""
+    echo -e "${BOLD}Uso:${NC}"
+    echo "  turia template <nombre> [--type=clean]"
+    echo ""
+    echo -e "${BOLD}Ejemplos:${NC}"
+    echo "  turia template user"
+    echo "  turia template product --type=clean"
+    echo "  turia template user,product,order"
+    echo ""
+    echo -e "${BOLD}═══════════════════════════════════════════════${NC}"
+    exit 0
+  fi
+}
+
+install_single_template() {
+  local template_name=$1
+  
+  if check_type_of_project; then
+    type=0
+  else
+    type=$?
+  fi
+
+  # Guardar MODULE_NAME original y asignar el template actual
+  local original_module_name="$MODULE_NAME"
+  MODULE_NAME="$template_name"
+
+  case "$type" in
+    0) echo -e "${GREEN}Te encuentras en un proyecto Android${NC}"; install_templates_android ;;
+    1) echo -e "${GREEN}Te encuentras en un proyecto IOS${NC}";     install_templates_ios ;;
+    2) echo -e "${GREEN}Te encuentras en un proyecto Flutter${NC}";  install_templates_flutter ;;
+    3) echo -e "${GREEN}Te encuentras en un proyecto Python${NC}";   install_templates_python ;;
+    *) echo -e "${RED}Error: No te encuentras en un proyecto válido.${NC}"; exit 1 ;;
+  esac
+  
+  # Restaurar MODULE_NAME original
+  MODULE_NAME="$original_module_name"
+}
+
+install_template() {
+  # Verificar si MODULE_NAME contiene comas (múltiples templates)
+  if [[ "$MODULE_NAME" == *","* ]]; then
+    echo -e "${BOLD}───────────────────────────────────────────────${NC}"
+    echo -e "${BOLD}🚀 GENERACIÓN BATCH DE TEMPLATES${NC}"
+    echo -e "${BOLD}───────────────────────────────────────────────${NC}"
+    echo ""
+    
+    # Dividir MODULE_NAME por comas
+    IFS=',' read -ra TEMPLATES <<< "$MODULE_NAME"
+    
+    echo -e "${YELLOW}Se generarán ${#TEMPLATES[@]} templates: ${TEMPLATES[*]}${NC}"
+    echo ""
+    
+    for template in "${TEMPLATES[@]}"; do
+      # Limpiar espacios en blanco
+      template=$(echo "$template" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      
+      if [ -n "$template" ]; then
+        echo -e "${BOLD}📝 Generando template: $template${NC}"
+        install_single_template "$template"
+        echo ""
+      fi
+    done
+    
+    echo -e "${GREEN}✅ Todos los templates han sido generados correctamente!${NC}"
+  else
+    # Un solo template
+    install_single_template "$MODULE_NAME"
+  fi
+}
+
+create_project() {
+  echo ""
+  if [[ "$MODULE_NAME" == "ios" ]]; then
+    echo -e "${GREEN}Empezando la instalación del arquetipo para ios${NC}"
+    echo ""
+    ios_create_project
+  elif [[ "$MODULE_NAME" == "android" ]]; then
+    echo -e "${GREEN}Empezando la instalación del arquetipo para android${NC}"
+    echo ""
+    android_create_project
+  elif [[ "$MODULE_NAME" == "flutter" ]]; then
+    echo -e "${GREEN}Empezando la instalación del arquetipo para Flutter${NC}"
+    echo ""
+    flutter_create_project
+  elif [[ "$MODULE_NAME" == "python" ]]; then
+    echo -e "${GREEN}Empezando la instalación del arquetipo para Python${NC}"
+    echo ""
+    python_create_project
+  else 
+    echo -e "${RED}Error: solo esta permitido como opción: ios, android, flutter o python.${NC}"
+    echo ""
+    exit 0
+  fi  
+}
+
+
+# Sin argumentos: analizar la carpeta, instalar las skills adecuadas del pool
+# en Claude Code y arrancar `claude`.
+if [ -z "${1:-}" ]; then
+  cleanup_temp_directory 2>/dev/null || true
+  launch_claude_with_skills
+fi
+
+# Procesar los argumentos
+COMMAND="$1"
+# Manejar --help como primer argumento
+if [[ "$COMMAND" == "--help" || "$COMMAND" == "-h" ]]; then
+  COMMAND="help"
+fi
+
+# Manejar caso especial: turia template --list
+if [[ "$COMMAND" == "template" && "${2:-}" == "--list" ]]; then
+  LIST_TEMPLATES="true"
+  MODULE_NAME=""
+elif [[ "$COMMAND" == "template" && -n "${2:-}" && "${2:-}" != "--list" ]]; then
+  MODULE_NAME="${2:-}"
+fi
+
+# Manejar caso especial: turia validate --staged
+VALIDATE_STAGED="false"
+if [[ "$COMMAND" == "validate" && "${2:-}" == "--staged" ]]; then
+  VALIDATE_STAGED="true"
+fi
+
+# Manejar comando 'ai' — cliente Python
+# `turia skills ...` es un alias de `turia ai --skills ...` para operaciones
+# de marketplace/packs sin entrar al REPL.
+if [[ "$COMMAND" == "ai" || "$COMMAND" == "skills" ]]; then
+  _turia_skills_prefix=()
+  if [[ "$COMMAND" == "skills" ]]; then
+    _turia_skills_prefix=(--skills)
+  fi
+  shift  # Remove command from args
+
+  # Disable EXIT trap immediately — we don't want cleanup_on_exit firing
+  # silently when something goes wrong in this code path.
+  trap - EXIT
+
+  if [[ "$COMMAND" == "ai" ]]; then
+    echo -e "  ${DIM}[turia] iniciando agente...${NC}" >&2
+  fi
+
+  # ── Resolve best Python (3.10+) ──────────────────────────────────
+  # Prefer Homebrew's python@3.12 (declared as a formula dependency,
+  # so it's guaranteed to exist on installs via brew). Fall back to
+  # any other Python 3.10+ on PATH if for some reason it's missing.
+  _turia_python=""
+  _brew_py_paths=(
+    "$HOMEBREW_PREFIX/opt/python@3.12/bin/python3.12"
+    "$HOMEBREW_PREFIX/opt/python@3.12/libexec/bin/python3"
+    "$HOMEBREW_PREFIX/bin/python3.12"
+    "/opt/homebrew/opt/python@3.12/bin/python3.12"
+    "/home/linuxbrew/.linuxbrew/opt/python@3.12/bin/python3.12"
+  )
+  for _bp in "${_brew_py_paths[@]}"; do
+    if [ -x "$_bp" ]; then
+      _turia_python="$_bp"
+      break
+    fi
+  done
+
+  # Fallback: scan PATH for any python 3.10+
+  if [ -z "$_turia_python" ]; then
+    for _candidate in python3.13 python3.12 python3.11 python3.10 python3; do
+      _path=$(command -v "$_candidate" 2>/dev/null)
+      if [ -n "$_path" ]; then
+        _ver=$("$_path" -c "import sys; print(sys.version_info[:2] >= (3,10))" 2>/dev/null)
+        if [ "$_ver" = "True" ]; then
+          _turia_python="$_path"
+          break
+        fi
+      fi
+    done
+  fi
+
+  # Last-resort: common system paths
+  if [ -z "$_turia_python" ]; then
+    for _bp in /opt/homebrew/bin/python3 /usr/local/bin/python3 /usr/bin/python3; do
+      if [ -x "$_bp" ]; then
+        _ver=$("$_bp" -c "import sys; print(sys.version_info[:2] >= (3,10))" 2>/dev/null)
+        if [ "$_ver" = "True" ]; then
+          _turia_python="$_bp"
+          break
+        fi
+      fi
+    done
+  fi
+
+  if [ -z "$_turia_python" ]; then
+    echo -e "${RED}Error: Se requiere Python 3.10 o superior.${NC}"
+    echo -e "Instala con: ${BOLD}brew install python@3.12${NC}"
+    exit 1
+  fi
+  echo -e "  ${DIM}[turia] python detectado: $_turia_python${NC}" >&2
+
+  # ── Ensure venv with dependencies ─────────────────────────────────
+  # ⚠️  BUMP THIS NUMBER when adding/changing Python dependencies.
+  # The venv is deleted and recreated when this changes.
+  # Without bumping, existing users keep the old venv and miss new deps.
+  _TURIA_DEPS_VERSION="3"
+  _turia_venv="$HOME/.config/turia-agent/venv"
+  _turia_deps_stamp="$_turia_venv/.deps_version"
+
+  _needs_venv=false
+  if [ ! -f "$_turia_venv/bin/python" ]; then
+    _needs_venv=true
+  elif [ ! -f "$_turia_deps_stamp" ] || [ "$(cat "$_turia_deps_stamp" 2>/dev/null)" != "$_TURIA_DEPS_VERSION" ]; then
+    echo -e "  ${DIM}Actualizando entorno Python...${NC}"
+    rm -rf "$_turia_venv"
+    _needs_venv=true
+  else
+    # Validate the existing venv's Python version is 3.10+
+    _venv_py_ok=$("$_turia_venv/bin/python" -c "import sys; print(sys.version_info[:2] >= (3,10))" 2>/dev/null)
+    if [ "$_venv_py_ok" != "True" ]; then
+      _venv_py_ver=$("$_turia_venv/bin/python" -c "import sys; print('%d.%d' % sys.version_info[:2])" 2>/dev/null || echo "?")
+      echo -e "  ${YELLOW}Venv existente usa Python $_venv_py_ver, se requiere 3.10+. Recreando...${NC}"
+      rm -rf "$_turia_venv"
+      _needs_venv=true
+    fi
+  fi
+
+  if [ "$_needs_venv" = true ]; then
+    echo -e "  ${DIM}Creando entorno Python para turia ai...${NC}"
+    "$_turia_python" -m venv "$_turia_venv" || {
+      echo -e "${RED}Error: No se pudo crear el entorno virtual.${NC}"
+      exit 1
+    }
+    "$_turia_venv/bin/pip" install --quiet --upgrade pip 2>/dev/null
+    "$_turia_venv/bin/pip" install --quiet httpx rich prompt-toolkit pyyaml || {
+      echo -e "${RED}Error: No se pudieron instalar las dependencias.${NC}"
+      rm -rf "$_turia_venv"
+      exit 1
+    }
+    echo "$_TURIA_DEPS_VERSION" > "$_turia_deps_stamp"
+    echo -e "  ${GREEN}✓${NC} Entorno Python configurado"
+  fi
+
+  # Quick check: verify python+core deps are importable, reinstall if broken
+  _venv_check_err=$("$_turia_venv/bin/python" -c "import httpx, rich, prompt_toolkit, yaml" 2>&1)
+  if [ -n "$_venv_check_err" ]; then
+    echo -e "  ${DIM}Reparando dependencias...${NC}"
+    if [ -n "$_venv_check_err" ]; then
+      echo -e "  ${DIM}(motivo: $(echo "$_venv_check_err" | tail -1))${NC}"
+    fi
+    "$_turia_venv/bin/pip" install --quiet --force-reinstall httpx rich prompt-toolkit pyyaml || {
+      echo -e "${RED}Error: No se pudieron reparar las dependencias.${NC}"
+      echo -e "${YELLOW}Intenta: rm -rf '$_turia_venv' && turia ai${NC}"
+      exit 1
+    }
+    echo -e "  ${GREEN}✓${NC} Dependencias reparadas"
+  fi
+
+  # Auto-install LSP server if needed (silent if already installed)
+  _lsp_pkg=$("$_turia_venv/bin/python" -c "
+import sys; sys.path.insert(0, '${scripts_dir}/agent')
+from turia_chat.driven.lsp.lsp_server_registry import get_pip_package
+from turia_chat.driven.context.project_context_builder import ProjectContextBuilder
+pt = ProjectContextBuilder().detect_project_type()
+pkg = get_pip_package(pt) if pt else None
+print(pkg or '')
+" 2>/dev/null)
+  if [ -n "$_lsp_pkg" ]; then
+    echo -e "  ${DIM}Instalando LSP: $_lsp_pkg...${NC}"
+    "$_turia_venv/bin/pip" install --quiet "$_lsp_pkg" 2>/dev/null && \
+      echo -e "  ${GREEN}✓${NC} LSP instalado" || true
+  fi
+
+  echo -e "  ${DIM}[turia] python=$_turia_venv/bin/python${NC}" >&2
+
+  # Run python WITHOUT exec so we can detect silent exits and surface
+  # the exit code. exec on WSL has been observed to swallow startup errors.
+  PYTHONPATH="${scripts_dir}/agent" "$_turia_venv/bin/python" -m turia_chat "${_turia_skills_prefix[@]}" "$@"
+  _turia_rc=$?
+
+  if [ $_turia_rc -ne 0 ]; then
+    echo -e "${RED}[turia] turia_chat termino con codigo $_turia_rc${NC}" >&2
+    echo -e "${YELLOW}Si esto persiste, prueba: rm -rf '$_turia_venv' && turia ai${NC}" >&2
+  fi
+  exit $_turia_rc
+fi
+
+# Manejar comandos del agente AI directamente: turia chat, turia login, turia setup
+if [[ "$COMMAND" == "chat" || "$COMMAND" == "login" || "$COMMAND" == "setup" || "$COMMAND" == "logout" || "$COMMAND" == "whoami" ]]; then
+  # Check if --help is requested
+  if [[ "${2:-}" == "--help" || "${2:-}" == "-h" ]]; then
+    agent_command "help"
+    exit $?
+  fi
+  shift  # Remove the command from args
+  agent_command "$COMMAND" "$@"
+  exit $?
+fi
+
+# Mantener compatibilidad con: turia agent <subcommand> [args]
+if [[ "$COMMAND" == "agent" ]]; then
+  AGENT_SUBCOMMAND="${2:---help}"
+  # Normalize --help to help
+  if [[ "$AGENT_SUBCOMMAND" == "--help" || "$AGENT_SUBCOMMAND" == "-h" ]]; then
+    AGENT_SUBCOMMAND="help"
+  fi
+  shift 2 2>/dev/null || shift
+  # Skip the while loop for agent commands - pass remaining args properly quoted
+  agent_command "$AGENT_SUBCOMMAND" "$@"
+  exit $?
+fi
+
+shift
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    --key=*)
+      KEY="${1#*=}"
+      ;;
+    --branch=*)
+      BRANCH="${1#*=}"
+      ;;
+    --type=*)
+      TEMPLATE_TYPE="${1#*=}"
+      ;;
+    --archetype=*)
+      ARCHETYPE_TYPE="${1#*=}"
+      ;;
+    --json)
+      JSON_OUTPUT="true"
+      ;;
+    --force)
+      FORCE_INSTALL="true"
+      export FORCE_INSTALL
+      ;;
+    --integrate)
+      INTEGRATE_MODE="true"
+      INSTALL_MODE_SELECTED="true"
+      export INTEGRATE_MODE
+      export INSTALL_MODE_SELECTED
+      ;;
+    --module)
+      INTEGRATE_MODE="false"
+      INSTALL_MODE_SELECTED="true"
+      export INTEGRATE_MODE
+      export INSTALL_MODE_SELECTED
+      ;;
+    --list)
+      LIST_TEMPLATES="true"
+      ;;
+    --bb-user=*)
+      BB_USER="${1#*=}"
+      ;;
+    --bb-token=*)
+      BB_TOKEN="${1#*=}"
+      ;;
+    --bb-workspace=*)
+      BB_WORKSPACE="${1#*=}"
+      ;;
+    --bb-repo=*)
+      BB_REPO="${1#*=}"
+      ;;
+    --bb-public)
+      BB_PRIVATE="false"
+      ;;
+    --help|-h)
+      COMMAND="help"
+      ;;
+    install)
+      COMMAND="install"
+      if [ -n "${2:-}" ]; then
+        # Detectar si hay múltiples módulos separados por comas
+        if [[ "$2" == *","* ]]; then
+          # Modo batch: convertir string "mod1,mod2,mod3" a array
+          IFS=',' read -ra MODULE_NAMES <<< "$2"
+          BATCH_MODE="true"
+        else
+          # Modo individual
+          MODULE_NAME="$2"
+          BATCH_MODE="false"
+        fi
+        shift
+      fi
+      ;;
+    list)
+      COMMAND="list"
+      ;;
+    branches)
+      COMMAND="branches"
+      ;;
+    status)
+      COMMAND="status"
+      ;;
+    validate)
+      COMMAND="validate"
+      ;;
+    install-hook)
+      COMMAND="install-hook"
+      ;;
+    help)
+      COMMAND="help"
+      ;;
+    create)
+      COMMAND="create"
+      if [ -n "${2:-}" ]; then
+        MODULE_NAME="$2"
+        shift
+      fi
+      ;;
+    template)
+      COMMAND="template"
+      MODULE_NAME="${2:-}"
+      shift
+      ;;
+    agent)
+      COMMAND="agent"
+      AGENT_SUBCOMMAND="${2:-help}"
+      AGENT_ARGS="${@:3}"
+      break  # Stop processing more arguments - agent handles its own
+      ;;
+    *)
+      MODULE_NAME="$1"
+      ;;
+  esac
+  shift
+done  
+
+# Limpiar directorio temporal antes de ejecutar cualquier comando
+cleanup_temp_directory
+
+if [ "$COMMAND" == "install" ]; then
+  if [ -z "$MODULE_NAME" ]; then
+    echo "Uso: $0 install <module_name> [--key=xxxx]"
+    exit 1
+  fi
+  install_module "$MODULE_NAME"
+elif [ "$COMMAND" == "list" ]; then
+  list_modules
+elif [ "$COMMAND" == "help" ]; then
+  show_help
+elif [ "$COMMAND" == "template" ]; then
+  if [ "$LIST_TEMPLATES" == "true" ]; then
+    list_templates
+  elif [ -z "$MODULE_NAME" ]; then
+    echo "Uso: $0 template <module_name> [--type=clean] [--list]"
+    exit 1
+  else
+    install_template "$MODULE_NAME"
+  fi
+elif [ "$COMMAND" == "create" ]; then
+  if [ -z "$MODULE_NAME" ]; then
+    echo "Uso: $0 create <platform {ios}>"
+    exit 1
+  fi
+  create_project "$MODULE_NAME"
+
+  # Post-create: configurar repo en Bitbucket si se pasaron los flags
+  if [ -n "$BB_TOKEN" ]; then
+    if [ -z "$BB_USER" ] || [ -z "$BB_WORKSPACE" ]; then
+      echo -e "${RED}Error: Se requieren --bb-user y --bb-workspace para crear el repo en Bitbucket.${NC}"
+      echo "Uso: turia create <platform> --key=XXX --bb-user=usuario --bb-token=YYY --bb-workspace=mi_workspace [--bb-repo=nombre_repo]"
+      exit 1
+    fi
+
+    # Determinar el directorio del proyecto creado
+    # Cada plataforma usa distinta variable: projectPath (ios/python), PROJECT_PATH (android/flutter)
+    CREATED_PROJECT_DIR="${projectPath:-${PROJECT_PATH:-}}"
+
+    if [ -z "$CREATED_PROJECT_DIR" ] || [ ! -d "$CREATED_PROJECT_DIR" ]; then
+      echo -e "${RED}Error: No se pudo determinar el directorio del proyecto creado.${NC}"
+      exit 1
+    fi
+
+    # Si no se especificó nombre de repo, usar el nombre del proyecto
+    if [ -z "$BB_REPO" ]; then
+      BB_REPO=$(basename "$CREATED_PROJECT_DIR")
+    fi
+
+    # Normalizar nombre del repo (lowercase, sin espacios)
+    BB_REPO=$(echo "$BB_REPO" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+
+    # Guardar directorio actual y entrar al proyecto
+    ORIGINAL_DIR="$PWD"
+    cd "$CREATED_PROJECT_DIR"
+
+    setup_bitbucket_repo "$BB_USER" "$BB_TOKEN" "$BB_WORKSPACE" "$BB_REPO" "$BB_PRIVATE"
+
+    # Volver al directorio original
+    cd "$ORIGINAL_DIR"
+  fi
+elif [ "$COMMAND" == "branches" ]; then
+  if [ -z "$KEY" ]; then
+    if [ "$JSON_OUTPUT" = "true" ]; then
+      echo "{\"status\":\"error\",\"message\":\"KEY requerida\"}"
+    else
+      echo "Uso: $0 branches --key=xxxx [--archetype=<platform>] [--json]"
+      echo "Plataformas válidas para archetype: android, ios, flutter, python"
+    fi
+    exit 1
+  fi
+
+  # Determinar formato de salida
+  output_format="normal"
+  if [ "$JSON_OUTPUT" = "true" ]; then
+    output_format="json"
+  fi
+
+  if [ -n "$ARCHETYPE_TYPE" ]; then
+    # Consultar ramas de arquetipos
+    get_access_token "$KEY" "$ARCHETYPE_TYPE"
+    list_branches "archetype-$ARCHETYPE_TYPE" "$output_format"
+  else
+    # Detectar automáticamente el tipo de proyecto
+    if check_type_of_project; then
+      type=0
+    else
+      type=$?
+    fi
+
+    case "$type" in
+      0)
+        if [ "$JSON_OUTPUT" != "true" ]; then
+          echo -e "${GREEN}Detectado proyecto Android${NC}"
+        fi
+        get_access_token "$KEY" "android"
+        list_branches "android" "$output_format"
+        ;;
+      1)
+        if [ "$JSON_OUTPUT" != "true" ]; then
+          echo -e "${GREEN}Detectado proyecto iOS${NC}"
+        fi
+        get_access_token "$KEY" "ios"
+        list_branches "ios" "$output_format"
+        ;;
+      2)
+        if [ "$JSON_OUTPUT" != "true" ]; then
+          echo -e "${GREEN}Detectado proyecto Flutter${NC}"
+        fi
+        get_access_token "$KEY" "flutter"
+        list_branches "flutter" "$output_format"
+        ;;
+      3)
+        if [ "$JSON_OUTPUT" != "true" ]; then
+          echo -e "${GREEN}Detectado proyecto Python${NC}"
+        fi
+        get_access_token "$KEY" "back"
+        list_branches "python" "$output_format"
+        ;;
+      *)
+        if [ "$JSON_OUTPUT" = "true" ]; then
+          echo "{\"status\":\"error\",\"message\":\"No se detectó un tipo de proyecto válido\"}"
+        else
+          echo -e "${RED}Error: No se detectó un tipo de proyecto válido.${NC}"
+          echo "Si quieres consultar ramas de arquetipos usa: $0 branches --key=xxxx --archetype=<platform>"
+        fi
+        exit 1
+        ;;
+    esac
+  fi
+elif [ "$COMMAND" == "status" ]; then
+  show_project_status
+elif [ "$COMMAND" == "validate" ]; then
+  if [ "$VALIDATE_STAGED" == "true" ]; then
+    validate_staged_configurations
+  else
+    validate_configuration_files
+  fi
+elif [ "$COMMAND" == "install-hook" ]; then
+  install_validation_hook
+else
+  echo "Comando no reconocido. Uso: $0 {ai|chat|login|setup|logout|whoami|install|list|template|create|branches|status|validate|help} [opciones]"
+  echo "Usa '$0 --help' para obtener ayuda detallada."
+  exit 1
+fi

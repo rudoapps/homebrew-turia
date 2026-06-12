@@ -1,0 +1,37 @@
+import SwiftUI
+
+struct {{TEMPLATE_NAME}}View: View {
+    @StateObject var viewModel: {{TEMPLATE_NAME}}ViewModel
+
+    var body: some View {
+        VStack {
+            if viewModel.uiState.loading {
+                ProgressView("Loading...")
+            } else if !viewModel.uiState.{{PARAM_NAME}}s.isEmpty {
+                List(viewModel.uiState.{{PARAM_NAME}}s, id: \.id) { {{PARAM_NAME}} in
+                    VStack(alignment: .leading) {
+                        Text({{PARAM_NAME}}.name)
+                            .font(.headline)
+                        Text("ID: \({{PARAM_NAME}}.id)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+            } else if let error = viewModel.uiState.error {
+                Text("Error: \(error.localizedDescription)")
+                    .foregroundColor(.red)
+            } else {
+                Text("No {{PARAM_NAME}}s found")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .onAppear {
+            viewModel.get{{TEMPLATE_NAME}}s()
+        }
+    }
+}
+
+#Preview {
+    {{TEMPLATE_NAME}}ViewBuilder().build()
+}

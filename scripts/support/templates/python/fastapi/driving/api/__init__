@@ -1,0 +1,6 @@
+"""
+Adaptadores de API REST
+
+Implementaciones de FastAPI para exponer los servicios como REST APIs.
+Incluye controladores, mappers y modelos de datos (DTOs).
+"""

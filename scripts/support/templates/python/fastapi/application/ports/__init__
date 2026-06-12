@@ -1,0 +1,6 @@
+"""
+Puertos de la aplicación
+
+Define las interfaces (contratos) entre la capa de aplicación y el mundo exterior.
+Incluye tanto puertos driving (entrada) como driven (salida).
+"""

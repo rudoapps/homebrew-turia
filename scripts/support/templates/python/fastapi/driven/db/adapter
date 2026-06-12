@@ -1,0 +1,112 @@
+from typing import List, Optional
+from django.db import IntegrityError
+from application.ports.driven.db.{{PARAM_NAME}}.repository_port import {{TEMPLATE_NAME}}RepositoryPort
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+from driven.db.{{PARAM_NAME}}.models import {{TEMPLATE_NAME}}DBO
+from driven.db.{{PARAM_NAME}}.mapper import {{TEMPLATE_NAME}}DBMapper
+
+
+class {{TEMPLATE_NAME}}DBRepositoryAdapter({{TEMPLATE_NAME}}RepositoryPort):
+    """Adaptador de repositorio de base de datos para {{TEMPLATE_NAME}} (Driven Adapter)"""
+    
+    def __init__(self):
+        self.mapper = {{TEMPLATE_NAME}}DBMapper()
+    
+    async def create(self, {{PARAM_NAME}}: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}:
+        """Crea un nuevo {{PARAM_NAME}} en la base de datos"""
+        try:
+            # Convertir entidad a DBO
+            dbo = await self.mapper.entity_to_dbo({{PARAM_NAME}})
+            
+            # Guardar en la base de datos usando Django async ORM
+            await dbo.asave()
+            
+            # Convertir DBO guardado de vuelta a entidad
+            return await self.mapper.dbo_to_entity(dbo)
+            
+        except IntegrityError as e:
+            raise ValueError(f"Error de integridad al crear el {{PARAM_NAME}}: {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"Error inesperado al crear el {{PARAM_NAME}}: {str(e)}")
+    
+    async def get_by_id(self, {{PARAM_NAME}}_id: int) -> Optional[{{TEMPLATE_NAME}}]:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        try:
+            dbo = await {{TEMPLATE_NAME}}DBO.objects.aget(id={{PARAM_NAME}}_id)
+            return await self.mapper.dbo_to_entity(dbo)
+        except {{TEMPLATE_NAME}}DBO.DoesNotExist:
+            return None
+        except Exception as e:
+            raise RuntimeError(f"Error al obtener el {{PARAM_NAME}} por ID: {str(e)}")
+    
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        try:
+            {{PARAM_NAME}}s = []
+            async for dbo in {{TEMPLATE_NAME}}DBO.objects.all()[skip:skip + limit]:
+                entity = await self.mapper.dbo_to_entity(dbo)
+                {{PARAM_NAME}}s.append(entity)
+            return {{PARAM_NAME}}s
+        except Exception as e:
+            raise RuntimeError(f"Error al obtener todos los {{PARAM_NAME}}s: {str(e)}")
+    
+    async def update(self, {{PARAM_NAME}}: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        try:
+            if not {{PARAM_NAME}}.id:
+                raise ValueError("No se puede actualizar un {{PARAM_NAME}} sin ID")
+            
+            # Obtener el DBO existente
+            dbo = await {{TEMPLATE_NAME}}DBO.objects.aget(id={{PARAM_NAME}}.id)
+            
+            # Actualizar campos
+            dbo.name = {{PARAM_NAME}}.name
+            
+            # Guardar cambios
+            await dbo.asave(update_fields=['name', 'updated_at'])
+            
+            # Convertir DBO actualizado de vuelta a entidad
+            return await self.mapper.dbo_to_entity(dbo)
+            
+        except {{TEMPLATE_NAME}}DBO.DoesNotExist:
+            raise ValueError(f"{{TEMPLATE_NAME}} con ID {{{PARAM_NAME}}.id}} no encontrado")
+        except IntegrityError as e:
+            raise ValueError(f"Error de integridad al actualizar el {{PARAM_NAME}}: {str(e)}")
+        except Exception as e:
+            raise RuntimeError(f"Error inesperado al actualizar el {{PARAM_NAME}}: {str(e)}")
+    
+    async def delete(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Elimina un {{PARAM_NAME}} por ID"""
+        try:
+            dbo = await {{TEMPLATE_NAME}}DBO.objects.aget(id={{PARAM_NAME}}_id)
+            await dbo.adelete()
+            return True
+        except {{TEMPLATE_NAME}}DBO.DoesNotExist:
+            return False
+        except Exception as e:
+            raise RuntimeError(f"Error al eliminar el {{PARAM_NAME}}: {str(e)}")
+    
+    async def search_by_name(self, name_pattern: str) -> List[{{TEMPLATE_NAME}}]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        try:
+            {{PARAM_NAME}}s = []
+            async for dbo in {{TEMPLATE_NAME}}DBO.objects.filter(name__icontains=name_pattern):
+                entity = await self.mapper.dbo_to_entity(dbo)
+                {{PARAM_NAME}}s.append(entity)
+            return {{PARAM_NAME}}s
+        except Exception as e:
+            raise RuntimeError(f"Error al buscar {{PARAM_NAME}}s por nombre: {str(e)}")
+    
+    async def exists_by_id(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Verifica si existe un {{PARAM_NAME}} por ID"""
+        try:
+            return await {{TEMPLATE_NAME}}DBO.objects.filter(id={{PARAM_NAME}}_id).aexists()
+        except Exception as e:
+            raise RuntimeError(f"Error al verificar la existencia del {{PARAM_NAME}}: {str(e)}")
+    
+    async def count(self) -> int:
+        """Cuenta el total de {{PARAM_NAME}}s"""
+        try:
+            return await {{TEMPLATE_NAME}}DBO.objects.acount()
+        except Exception as e:
+            raise RuntimeError(f"Error al contar los {{PARAM_NAME}}s: {str(e)}")

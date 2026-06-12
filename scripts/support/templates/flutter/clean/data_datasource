@@ -1,0 +1,32 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/{{PARAM_NAME}}_model.dart';
+
+abstract class {{TEMPLATE_NAME}}RemoteDataSource {
+  Future<List<{{TEMPLATE_NAME}}Model>> getAll{{TEMPLATE_NAME}}s();
+}
+
+class {{TEMPLATE_NAME}}RemoteDataSourceImpl implements {{TEMPLATE_NAME}}RemoteDataSource {
+  final http.Client client;
+  final String baseUrl;
+
+  {{TEMPLATE_NAME}}RemoteDataSourceImpl({
+    required this.client,
+    this.baseUrl = 'https://api.example.com',
+  });
+
+  @override
+  Future<List<{{TEMPLATE_NAME}}Model>> getAll{{TEMPLATE_NAME}}s() async {
+    final response = await client.get(
+      Uri.parse('$baseUrl/{{PARAM_NAME}}s'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonList = json.decode(response.body);
+      return jsonList.map((json) => {{TEMPLATE_NAME}}Model.fromMap(json)).toList();
+    } else {
+      throw Exception('Failed to get {{PARAM_NAME}}s');
+    }
+  }
+}

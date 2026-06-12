@@ -1,0 +1,14 @@
+from application.services.{{PARAM_NAME}}_service import {{TEMPLATE_NAME}}Service
+from application.ports.driven.db.{{PARAM_NAME}}.repository_port import {{TEMPLATE_NAME}}RepositoryPort
+from driven.db.{{PARAM_NAME}}.adapter import {{TEMPLATE_NAME}}DBRepositoryAdapter
+
+
+def get_{{PARAM_NAME}}_repository() -> {{TEMPLATE_NAME}}RepositoryPort:
+    """Inyección de dependencia para el repositorio de {{PARAM_NAME}}"""
+    return {{TEMPLATE_NAME}}DBRepositoryAdapter()
+
+
+def get_{{PARAM_NAME}}_service() -> {{TEMPLATE_NAME}}Service:
+    """Inyección de dependencia para el servicio de {{PARAM_NAME}}"""
+    repository = get_{{PARAM_NAME}}_repository()
+    return {{TEMPLATE_NAME}}Service(repository)

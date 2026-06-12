@@ -1,0 +1,6 @@
+"""
+Adaptadores Driving (entrada)
+
+Implementaciones concretas de los puertos driving.
+Incluye adaptadores para APIs REST, GraphQL, CLI, etc.
+"""

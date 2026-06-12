@@ -1,0 +1,3 @@
+sealed class {{TEMPLATE_NAME}}Event {}
+
+final class {{TEMPLATE_NAME}}Started extends {{TEMPLATE_NAME}}Event {}

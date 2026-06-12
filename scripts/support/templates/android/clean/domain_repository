@@ -1,0 +1,3 @@
+interface {{TEMPLATE_NAME}}Repository {
+    suspend fun getAll{{TEMPLATE_NAME}}s(): List<{{TEMPLATE_NAME}}>
+}

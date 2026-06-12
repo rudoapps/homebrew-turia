@@ -1,0 +1,6 @@
+"""
+Puertos Driven (salida)
+
+Interfaces que define cómo la aplicación interactúa con servicios externos,
+bases de datos, APIs externas y otros recursos del mundo exterior.
+"""

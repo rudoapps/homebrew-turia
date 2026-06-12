@@ -1,0 +1,184 @@
+from typing import List
+from fastapi import APIRouter, HTTPException, status, Depends
+from application.ports.driving.{{PARAM_NAME}}.service_port import {{TEMPLATE_NAME}}ServicePort
+from application.ports.driving.{{PARAM_NAME}}.api_port import {{TEMPLATE_NAME}}APIPort
+from driving.api.{{PARAM_NAME}}.models.requests import Create{{TEMPLATE_NAME}}Request, Update{{TEMPLATE_NAME}}Request
+from driving.api.{{PARAM_NAME}}.models.responses import {{TEMPLATE_NAME}}Response
+from driving.api.{{PARAM_NAME}}.mapper import {{TEMPLATE_NAME}}APIMapper
+from application.di.dependencies import get_{{PARAM_NAME}}_service
+from commons.routing import register_routes, get, post, put, delete
+from commons.middleware import exception_handler, is_authenticated_or_allow_any
+
+
+class {{TEMPLATE_NAME}}APIAdapter({{TEMPLATE_NAME}}APIPort):
+    """Adaptador de API REST para {{TEMPLATE_NAME}} (Driving Adapter)"""
+    
+    def __init__(self):
+        self._router = APIRouter(prefix="/{{PARAM_NAME}}s", tags=["{{PARAM_NAME}}s"])
+        self.mapper = {{TEMPLATE_NAME}}APIMapper()
+        register_routes(self)
+    
+    @property
+    def router(self) -> APIRouter:
+        """Router de FastAPI"""
+        return self._router
+    
+    @post("/", response_model={{TEMPLATE_NAME}}Response, status_code=status.HTTP_201_CREATED)
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def create_{{PARAM_NAME}}(
+        self,
+        request: Create{{TEMPLATE_NAME}}Request,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> {{TEMPLATE_NAME}}Response:
+        """Crea un nuevo {{PARAM_NAME}}"""
+        try:
+            {{PARAM_NAME}} = await service.create_{{PARAM_NAME}}(request.name)
+            return self.mapper.entity_to_response({{PARAM_NAME}})
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al crear el {{PARAM_NAME}}"
+            )
+    
+    @get("/{{{PARAM_NAME}}_id}", response_model={{TEMPLATE_NAME}}Response)
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def get_{{PARAM_NAME}}(
+        self,
+        {{PARAM_NAME}}_id: int,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> {{TEMPLATE_NAME}}Response:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        try:
+            {{PARAM_NAME}} = await service.get_{{PARAM_NAME}}_by_id({{PARAM_NAME}}_id)
+            if not {{PARAM_NAME}}:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"{{TEMPLATE_NAME}} con ID {{{PARAM_NAME}}_id}} no encontrado"
+                )
+            return self.mapper.entity_to_response({{PARAM_NAME}})
+        except HTTPException:
+            raise
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al obtener el {{PARAM_NAME}}"
+            )
+    
+    @get("/", response_model=List[{{TEMPLATE_NAME}}Response])
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def get_all_{{PARAM_NAME}}s(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> List[{{TEMPLATE_NAME}}Response]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        try:
+            {{PARAM_NAME}}s = await service.get_all_{{PARAM_NAME}}s(skip=skip, limit=limit)
+            return [self.mapper.entity_to_response({{PARAM_NAME}}) for {{PARAM_NAME}} in {{PARAM_NAME}}s]
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al obtener los {{PARAM_NAME}}s"
+            )
+    
+    @put("/{{{PARAM_NAME}}_id}", response_model={{TEMPLATE_NAME}}Response)
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def update_{{PARAM_NAME}}(
+        self,
+        {{PARAM_NAME}}_id: int,
+        request: Update{{TEMPLATE_NAME}}Request,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> {{TEMPLATE_NAME}}Response:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        try:
+            {{PARAM_NAME}} = await service.update_{{PARAM_NAME}}({{PARAM_NAME}}_id, request.name)
+            if not {{PARAM_NAME}}:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"{{TEMPLATE_NAME}} con ID {{{PARAM_NAME}}_id}} no encontrado"
+                )
+            return self.mapper.entity_to_response({{PARAM_NAME}})
+        except HTTPException:
+            raise
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al actualizar el {{PARAM_NAME}}"
+            )
+    
+    @delete("/{{{PARAM_NAME}}_id}", status_code=status.HTTP_204_NO_CONTENT)
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def delete_{{PARAM_NAME}}(
+        self,
+        {{PARAM_NAME}}_id: int,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> None:
+        """Elimina un {{PARAM_NAME}}"""
+        try:
+            deleted = await service.delete_{{PARAM_NAME}}({{PARAM_NAME}}_id)
+            if not deleted:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"{{TEMPLATE_NAME}} con ID {{{PARAM_NAME}}_id}} no encontrado"
+                )
+        except HTTPException:
+            raise
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al eliminar el {{PARAM_NAME}}"
+            )
+    
+    @get("/search", response_model=List[{{TEMPLATE_NAME}}Response])
+    @exception_handler
+    @is_authenticated_or_allow_any
+    async def search_{{PARAM_NAME}}s(
+        self,
+        name_pattern: str,
+        service: {{TEMPLATE_NAME}}ServicePort = Depends(get_{{PARAM_NAME}}_service)
+    ) -> List[{{TEMPLATE_NAME}}Response]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        try:
+            {{PARAM_NAME}}s = await service.search_{{PARAM_NAME}}s_by_name(name_pattern)
+            return [self.mapper.entity_to_response({{PARAM_NAME}}) for {{PARAM_NAME}} in {{PARAM_NAME}}s]
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error interno del servidor al buscar {{PARAM_NAME}}s"
+            )

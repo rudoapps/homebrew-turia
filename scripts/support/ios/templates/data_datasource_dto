@@ -1,0 +1,4 @@
+struct {{TEMPLATE_NAME}}DTO: Codable {
+	var id: Int
+    var name: String
+}

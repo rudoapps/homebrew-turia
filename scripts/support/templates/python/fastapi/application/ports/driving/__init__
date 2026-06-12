@@ -1,0 +1,6 @@
+"""
+Puertos Driving (entrada)
+
+Interfaces que definen cómo el mundo exterior puede interactuar con la aplicación.
+Incluye contratos para APIs, servicios y otros puntos de entrada.
+"""

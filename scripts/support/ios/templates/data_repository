@@ -1,0 +1,24 @@
+class {{TEMPLATE_NAME}}Repository: {{TEMPLATE_NAME}}RepositoryProtocol {
+    // MARK: - Properties
+    var remote: {{TEMPLATE_NAME}}RemoteDataSourceProtocol
+
+    // MARK: - Init
+    init(remote:  {{TEMPLATE_NAME}}RemoteDataSourceProtocol) {
+        self.remote = remote
+    }
+
+    func get{{TEMPLATE_NAME}}s() async throws -> [{{TEMPLATE_NAME}}] {
+        let dtos = try await remote.get{{TEMPLATE_NAME}}s()
+        return dtos.map { $0.toDomain() }
+    }
+}
+
+// MARK: - DTO to Domain Mapping
+fileprivate extension {{TEMPLATE_NAME}}DTO {
+    func toDomain() -> {{TEMPLATE_NAME}} {
+        return {{TEMPLATE_NAME}}(
+            id: self.id,
+            name: self.name
+        )
+    }
+}

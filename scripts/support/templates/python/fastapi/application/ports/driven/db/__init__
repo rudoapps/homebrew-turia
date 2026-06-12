@@ -1,0 +1,5 @@
+"""
+Puertos de base de datos
+
+Interfaces para la persistencia de datos y operaciones de repositorio.
+"""

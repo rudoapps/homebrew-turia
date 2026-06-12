@@ -1,0 +1,28 @@
+import 'package:injectable/injectable.dart';
+
+import '../../../../../core/services/network/source/network_service.dart';
+import '../source/{{PARAM_NAME}}_remote_data_source.dart';
+import 'dto/{{PARAM_NAME}}_response_dto.dart';
+
+@Injectable(as: {{TEMPLATE_NAME}}RemoteDataSource)
+class {{TEMPLATE_NAME}}RemoteDataSourceImpl implements {{TEMPLATE_NAME}}RemoteDataSource {
+  final NetworkService _networkService;
+
+  {{TEMPLATE_NAME}}RemoteDataSourceImpl({
+    required NetworkService networkService,
+  }) : _networkService = networkService;
+
+  @override
+  Future<{{TEMPLATE_NAME}}ResponseDto> fetch{{TEMPLATE_NAME}}() async {
+    final response = await _networkService.call().get('/{{PARAM_NAME}}');
+    return {{TEMPLATE_NAME}}ResponseDto.fromJson(response.data);
+  }
+
+  @override
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}ResponseDto dto}) async {
+    await _networkService.call().post(
+      '/{{PARAM_NAME}}',
+      data: dto.toJson(),
+    );
+  }
+}

@@ -1,0 +1,44 @@
+import '../../../../../core/exceptions/custom_exception.dart';
+
+class {{TEMPLATE_NAME}}Data {
+  final String id;
+  final String name;
+
+  const {{TEMPLATE_NAME}}Data({
+    required this.id,
+    required this.name,
+  });
+
+  {{TEMPLATE_NAME}}Data copyWith({
+    String? id,
+    String? name,
+  }) {
+    return {{TEMPLATE_NAME}}Data(
+      id: id ?? this.id,
+      name: name ?? this.name,
+    );
+  }
+}
+
+sealed class {{TEMPLATE_NAME}}State {
+  final {{TEMPLATE_NAME}}Data data;
+  const {{TEMPLATE_NAME}}State({required this.data});
+}
+
+final class {{TEMPLATE_NAME}}Initial extends {{TEMPLATE_NAME}}State {
+  {{TEMPLATE_NAME}}Initial()
+      : super(data: const {{TEMPLATE_NAME}}Data(id: '', name: ''));
+}
+
+final class {{TEMPLATE_NAME}}Loading extends {{TEMPLATE_NAME}}State {
+  {{TEMPLATE_NAME}}Loading({required super.data});
+}
+
+final class {{TEMPLATE_NAME}}Success extends {{TEMPLATE_NAME}}State {
+  {{TEMPLATE_NAME}}Success({required super.data});
+}
+
+final class {{TEMPLATE_NAME}}Failure extends {{TEMPLATE_NAME}}State {
+  final CustomException error;
+  {{TEMPLATE_NAME}}Failure({required this.error, required super.data});
+}

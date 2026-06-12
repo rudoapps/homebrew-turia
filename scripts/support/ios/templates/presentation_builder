@@ -1,0 +1,10 @@
+class {{TEMPLATE_NAME}}ViewBuilder {
+    func build() -> {{TEMPLATE_NAME}}View {
+        let {{PARAM_NAME}}UseCases = {{TEMPLATE_NAME}}Container().makeUseCases()
+        let viewModel = {{TEMPLATE_NAME}}ViewModel(
+            {{PARAM_NAME}}UseCases: {{PARAM_NAME}}UseCases
+        )
+        let view = {{TEMPLATE_NAME}}View(viewModel: viewModel)
+        return view
+    }
+}

@@ -1,0 +1,31 @@
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+from driven.db.{{PARAM_NAME}}.models import {{TEMPLATE_NAME}}DBO
+
+
+class {{TEMPLATE_NAME}}DBMapper:
+    """Mapper para convertir entre entidades de dominio y objetos de base de datos (DBOs)"""
+    
+    async def entity_to_dbo(self, entity: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}DBO:
+        """Convierte una entidad de dominio a DBO para persistencia"""
+        dbo_data = {
+            "name": entity.name,
+        }
+        
+        # Si la entidad tiene ID, significa que ya existe en la BD
+        if entity.id:
+            dbo_data["id"] = entity.id
+        
+        return {{TEMPLATE_NAME}}DBO(**dbo_data)
+    
+    async def dbo_to_entity(self, dbo: {{TEMPLATE_NAME}}DBO) -> {{TEMPLATE_NAME}}:
+        """Convierte un DBO de base de datos a entidad de dominio"""
+        return {{TEMPLATE_NAME}}(
+            id=dbo.id,
+            name=dbo.name,
+            created_at=dbo.created_at,
+            updated_at=dbo.updated_at
+        )
+    
+    async def dbos_to_entities(self, dbos: list[{{TEMPLATE_NAME}}DBO]) -> list[{{TEMPLATE_NAME}}]:
+        """Convierte una lista de DBOs a entidades de dominio"""
+        return [await self.dbo_to_entity(dbo) for dbo in dbos]

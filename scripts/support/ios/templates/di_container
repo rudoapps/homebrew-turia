@@ -1,0 +1,12 @@
+import TripleA 
+
+class {{TEMPLATE_NAME}}Container {
+    func makeUseCases() -> {{TEMPLATE_NAME}}UseCases {
+        let remote = {{TEMPLATE_NAME}}RemoteDataSource(
+            //TODO: Add your network
+            network: 
+        )
+        let repository = {{TEMPLATE_NAME}}Repository(remote: remote)
+        return {{TEMPLATE_NAME}}UseCases(repository: repository)
+    }
+}

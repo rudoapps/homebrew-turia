@@ -1,0 +1,4 @@
+struct {{TEMPLATE_NAME}} {
+    let id: Int
+    let name: String
+}

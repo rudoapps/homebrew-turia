@@ -1,0 +1,45 @@
+import 'package:injectable/injectable.dart';
+import 'dart:convert';
+
+import '../../../../../core/services/storage/secure-storage/secure_storage_impl.dart';
+import '../../../../../core/services/storage/shared-preferences/preferences_storage_impl.dart';
+import '../source/{{PARAM_NAME}}_local_data_source.dart';
+import 'dbo/{{PARAM_NAME}}_dbo.dart';
+
+@Injectable(as: {{TEMPLATE_NAME}}LocalDataSource)
+class {{TEMPLATE_NAME}}LocalDataSourceImpl implements {{TEMPLATE_NAME}}LocalDataSource {
+  final PreferencesStorageImpl _preferencesStorage;
+  final SecureStorageImpl _secureStorage;
+  final String _{{PARAM_NAME}}Key = '{{PARAM_NAME}}_key';
+
+  {{TEMPLATE_NAME}}LocalDataSourceImpl({
+    required PreferencesStorageImpl preferencesStorage,
+    required SecureStorageImpl secureStorage,
+  })  : _preferencesStorage = preferencesStorage,
+        _secureStorage = secureStorage;
+
+  @override
+  Future<{{TEMPLATE_NAME}}Dbo?> fetch{{TEMPLATE_NAME}}() async {
+    final map = await _preferencesStorage.read(key: _{{PARAM_NAME}}Key);
+    await _secureStorage.read(key: _{{PARAM_NAME}}Key);
+    return map != null ? {{TEMPLATE_NAME}}Dbo.fromMap(json.decode(map)) : null;
+  }
+
+  @override
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}Dbo dbo}) async {
+    await _secureStorage.write(
+      key: _{{PARAM_NAME}}Key,
+      value: json.encode(dbo.toMap()),
+    );
+    await _preferencesStorage.write(
+      key: _{{PARAM_NAME}}Key,
+      value: json.encode(dbo.toMap()),
+    );
+  }
+
+  @override
+  Future<void> clear{{TEMPLATE_NAME}}() async {
+    await _secureStorage.delete(key: _{{PARAM_NAME}}Key);
+    await _preferencesStorage.delete(key: _{{PARAM_NAME}}Key);
+  }
+}

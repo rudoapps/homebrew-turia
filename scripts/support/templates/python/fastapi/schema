@@ -1,0 +1,16 @@
+from pydantic import BaseModel
+
+
+class {{TEMPLATE_NAME}}Base(BaseModel):
+    name: str
+
+
+class {{TEMPLATE_NAME}}InDB({{TEMPLATE_NAME}}Base):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+class {{TEMPLATE_NAME}}Response({{TEMPLATE_NAME}}InDB):
+    pass

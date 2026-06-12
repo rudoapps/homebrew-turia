@@ -1,0 +1,17 @@
+import TripleA
+
+class {{TEMPLATE_NAME}}RemoteDataSource: {{TEMPLATE_NAME}}RemoteDataSourceProtocol {
+    private let network: Network
+
+    init(network: Network) {
+        self.network = network
+    }
+
+    func get{{TEMPLATE_NAME}}s() async throws -> [{{TEMPLATE_NAME}}DTO] {        
+        let endpoint = Endpoint(path: "", httpMethod: .get)
+        let data = try await network.loadAuthorized(this: endpoint,
+                                                    of: [{{TEMPLATE_NAME}}DTO].self)
+
+        return data
+    }
+}

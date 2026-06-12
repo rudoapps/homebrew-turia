@@ -1,0 +1,50 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../../core/exceptions/app_exceptions.dart';
+import '../../../../../core/exceptions/custom_exception.dart';
+import '../../../../../core/services/navigation/source/navigation_service.dart';
+import '../../../../domain/use_cases/{{PARAM_NAME}}/{{PARAM_NAME}}_use_case.dart';
+import '{{PARAM_NAME}}_event.dart';
+import '{{PARAM_NAME}}_state.dart';
+
+class {{TEMPLATE_NAME}}Bloc extends Bloc<{{TEMPLATE_NAME}}Event, {{TEMPLATE_NAME}}State> {
+  final {{TEMPLATE_NAME}}UseCase _{{PARAM_NAME}}UseCase;
+  final NavigationService _navigationService;
+
+  {{TEMPLATE_NAME}}Bloc({
+    required {{TEMPLATE_NAME}}UseCase {{PARAM_NAME}}UseCase,
+    required NavigationService navigationService,
+  })  : _{{PARAM_NAME}}UseCase = {{PARAM_NAME}}UseCase,
+        _navigationService = navigationService,
+        super({{TEMPLATE_NAME}}Initial()) {
+    on<{{TEMPLATE_NAME}}Started>(_onStarted);
+  }
+
+  Future<void> _onStarted(
+    {{TEMPLATE_NAME}}Started event,
+    Emitter<{{TEMPLATE_NAME}}State> emit,
+  ) async {
+    emit({{TEMPLATE_NAME}}Loading(data: state.data));
+    try {
+      final result = await _{{PARAM_NAME}}UseCase.call();
+      final newData = state.data.copyWith(
+        id: result.id,
+        name: result.name,
+      );
+      emit({{TEMPLATE_NAME}}Success(data: newData));
+    } catch (e) {
+      final error = e is CustomException ? e : GenericException();
+      emit({{TEMPLATE_NAME}}Failure(error: error, data: state.data));
+
+      // Mostrar popup de error
+      _navigationService.showPopUp(
+        title: 'Error',
+        message: error.message,
+        actions: [
+          // Botón de cancelar/cerrar
+          // Actions específicos según necesidad
+        ],
+      );
+    }
+  }
+}

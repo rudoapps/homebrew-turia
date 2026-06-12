@@ -1,0 +1,45 @@
+from abc import ABC, abstractmethod
+from typing import List
+from fastapi import APIRouter
+from driving.api.{{PARAM_NAME}}.models.requests import Create{{TEMPLATE_NAME}}Request, Update{{TEMPLATE_NAME}}Request
+from driving.api.{{PARAM_NAME}}.models.responses import {{TEMPLATE_NAME}}Response
+
+
+class {{TEMPLATE_NAME}}APIPort(ABC):
+    """Puerto de entrada para la API de {{TEMPLATE_NAME}} (Driving Port)"""
+    
+    @property
+    @abstractmethod
+    def router(self) -> APIRouter:
+        """Router de FastAPI para {{PARAM_NAME}}s"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def create_{{PARAM_NAME}}(self, request: Create{{TEMPLATE_NAME}}Request) -> {{TEMPLATE_NAME}}Response:
+        """Crea un nuevo {{PARAM_NAME}}"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int) -> {{TEMPLATE_NAME}}Response:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_all_{{PARAM_NAME}}s(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}Response]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def update_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int, request: Update{{TEMPLATE_NAME}}Request) -> {{TEMPLATE_NAME}}Response:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def delete_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int) -> None:
+        """Elimina un {{PARAM_NAME}}"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def search_{{PARAM_NAME}}s(self, name_pattern: str) -> List[{{TEMPLATE_NAME}}Response]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        raise NotImplementedError

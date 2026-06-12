@@ -1,0 +1,21 @@
+import 'package:injectable/injectable.dart';
+
+import '../../../../domain/entities/{{PARAM_NAME}}/{{PARAM_NAME}}_entity.dart';
+import '../../../datasources/{{PARAM_NAME}}/remote/dto/{{PARAM_NAME}}_response_dto.dart';
+
+@Injectable()
+class {{TEMPLATE_NAME}}MapperDto {
+  {{TEMPLATE_NAME}}Entity fromDto({{TEMPLATE_NAME}}ResponseDto dto) {
+    return {{TEMPLATE_NAME}}Entity(
+      id: dto.id,
+      name: dto.name,
+    );
+  }
+
+  {{TEMPLATE_NAME}}ResponseDto toDto({{TEMPLATE_NAME}}Entity entity) {
+    return {{TEMPLATE_NAME}}ResponseDto(
+      id: entity.id,
+      name: entity.name,
+    );
+  }
+}

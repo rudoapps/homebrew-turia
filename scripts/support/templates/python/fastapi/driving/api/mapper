@@ -1,0 +1,19 @@
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+from driving.api.{{PARAM_NAME}}.models.responses import {{TEMPLATE_NAME}}Response
+
+
+class {{TEMPLATE_NAME}}APIMapper:
+    """Mapper para convertir entre entidades de dominio y DTOs de API"""
+    
+    def entity_to_response(self, entity: {{TEMPLATE_NAME}}) -> {{TEMPLATE_NAME}}Response:
+        """Convierte una entidad de dominio a DTO de respuesta"""
+        return {{TEMPLATE_NAME}}Response(
+            id=entity.id,
+            name=entity.name,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at
+        )
+    
+    def entities_to_responses(self, entities: list[{{TEMPLATE_NAME}}]) -> list[{{TEMPLATE_NAME}}Response]:
+        """Convierte una lista de entidades a DTOs de respuesta"""
+        return [self.entity_to_response(entity) for entity in entities]

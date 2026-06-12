@@ -1,0 +1,37 @@
+from abc import ABC, abstractmethod
+from typing import List, Optional
+from domain.entities.{{PARAM_NAME}} import {{TEMPLATE_NAME}}
+
+
+class {{TEMPLATE_NAME}}ServicePort(ABC):
+    """Puerto de entrada para el servicio de {{TEMPLATE_NAME}} (Driving Port)"""
+    
+    @abstractmethod
+    async def create_{{PARAM_NAME}}(self, name: str) -> {{TEMPLATE_NAME}}:
+        """Crea un nuevo {{PARAM_NAME}}"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_{{PARAM_NAME}}_by_id(self, {{PARAM_NAME}}_id: int) -> Optional[{{TEMPLATE_NAME}}]:
+        """Obtiene un {{PARAM_NAME}} por ID"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def get_all_{{PARAM_NAME}}s(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}]:
+        """Obtiene todos los {{PARAM_NAME}}s con paginación"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def update_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int, name: str) -> Optional[{{TEMPLATE_NAME}}]:
+        """Actualiza un {{PARAM_NAME}} existente"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def delete_{{PARAM_NAME}}(self, {{PARAM_NAME}}_id: int) -> bool:
+        """Elimina un {{PARAM_NAME}}"""
+        raise NotImplementedError
+    
+    @abstractmethod
+    async def search_{{PARAM_NAME}}s_by_name(self, name_pattern: str) -> List[{{TEMPLATE_NAME}}]:
+        """Busca {{PARAM_NAME}}s por patrón de nombre"""
+        raise NotImplementedError

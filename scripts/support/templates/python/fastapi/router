@@ -1,0 +1,25 @@
+from typing import List
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+from services.{{PARAM_NAME}}_service import {{TEMPLATE_NAME}}Service
+from schemas.{{PARAM_NAME}} import {{TEMPLATE_NAME}}Response
+
+router = APIRouter(
+    prefix="/{{PARAM_NAME}}s",
+    tags=["{{PARAM_NAME}}s"]
+)
+
+
+def get_{{PARAM_NAME}}_service(db: Session = Depends(get_db)) -> {{TEMPLATE_NAME}}Service:
+    return {{TEMPLATE_NAME}}Service(db)
+
+
+@router.get("/", response_model=List[{{TEMPLATE_NAME}}Response])
+def get_all_{{PARAM_NAME}}s(
+    skip: int = 0,
+    limit: int = 100,
+    service: {{TEMPLATE_NAME}}Service = Depends(get_{{PARAM_NAME}}_service)
+):
+    """Get all {{PARAM_NAME}}s with pagination"""
+    return service.get_all_{{PARAM_NAME}}s(skip=skip, limit=limit)

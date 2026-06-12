@@ -1,0 +1,41 @@
+from pydantic import BaseModel, Field
+
+
+class Create{{TEMPLATE_NAME}}Request(BaseModel):
+    """Modelo de solicitud para crear un {{PARAM_NAME}}"""
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Nombre del {{PARAM_NAME}}",
+        example="Ejemplo {{TEMPLATE_NAME}}"
+    )
+    
+    class Config:
+        """Configuración del modelo"""
+        str_strip_whitespace = True
+        schema_extra = {
+            "example": {
+                "name": "Nuevo {{TEMPLATE_NAME}}"
+            }
+        }
+
+
+class Update{{TEMPLATE_NAME}}Request(BaseModel):
+    """Modelo de solicitud para actualizar un {{PARAM_NAME}}"""
+    name: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Nuevo nombre del {{PARAM_NAME}}",
+        example="{{TEMPLATE_NAME}} Actualizado"
+    )
+    
+    class Config:
+        """Configuración del modelo"""
+        str_strip_whitespace = True
+        schema_extra = {
+            "example": {
+                "name": "{{TEMPLATE_NAME}} Actualizado"
+            }
+        }

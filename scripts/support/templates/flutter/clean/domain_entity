@@ -1,0 +1,19 @@
+class {{TEMPLATE_NAME}}Entity {
+  final String id;
+  final String name;
+
+  const {{TEMPLATE_NAME}}Entity({
+    required this.id,
+    required this.name,
+  });
+
+  {{TEMPLATE_NAME}}Entity copyWith({
+    String? id,
+    String? name,
+  }) {
+    return {{TEMPLATE_NAME}}Entity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+    );
+  }
+}

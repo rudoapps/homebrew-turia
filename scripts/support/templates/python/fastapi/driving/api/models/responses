@@ -1,0 +1,22 @@
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
+
+class {{TEMPLATE_NAME}}Response(BaseModel):
+    """Modelo de respuesta para {{PARAM_NAME}}"""
+    id: int = Field(..., description="ID único del {{PARAM_NAME}}")
+    name: str = Field(..., description="Nombre del {{PARAM_NAME}}")
+    created_at: Optional[datetime] = Field(None, description="Fecha de creación")
+    updated_at: Optional[datetime] = Field(None, description="Fecha de última actualización")
+    
+    class Config:
+        """Configuración del modelo"""
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Ejemplo {{TEMPLATE_NAME}}",
+                "created_at": "2023-01-01T00:00:00Z",
+                "updated_at": "2023-01-01T00:00:00Z"
+            }
+        }

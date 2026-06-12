@@ -1,0 +1,43 @@
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
+
+class Base{{TEMPLATE_NAME}}(BaseModel):
+    """Entidad base para {{TEMPLATE_NAME}}"""
+    name: str = Field(..., min_length=1, max_length=100, description="Nombre del {{PARAM_NAME}}")
+    
+    class Config:
+        """Configuración de Pydantic"""
+        validate_assignment = True
+        str_strip_whitespace = True
+
+
+class {{TEMPLATE_NAME}}(Base{{TEMPLATE_NAME}}):
+    """Entidad de dominio {{TEMPLATE_NAME}}"""
+    id: Optional[int] = Field(None, description="ID único del {{PARAM_NAME}}")
+    created_at: Optional[datetime] = Field(None, description="Fecha de creación")
+    updated_at: Optional[datetime] = Field(None, description="Fecha de actualización")
+    
+    def is_persisted(self) -> bool:
+        """Verifica si la entidad está persistida en la base de datos"""
+        return self.id is not None
+    
+    def validate_business_rules(self) -> None:
+        """Valida las reglas de negocio específicas del dominio"""
+        if not self.name or len(self.name.strip()) == 0:
+            raise ValueError("El nombre del {{PARAM_NAME}} no puede estar vacío")
+        
+        if len(self.name) > 100:
+            raise ValueError("El nombre del {{PARAM_NAME}} no puede exceder 100 caracteres")
+    
+    class Config(Base{{TEMPLATE_NAME}}.Config):
+        """Configuración extendida"""
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "Ejemplo {{TEMPLATE_NAME}}",
+                "created_at": "2023-01-01T00:00:00Z",
+                "updated_at": "2023-01-01T00:00:00Z"
+            }
+        }

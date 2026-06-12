@@ -1,0 +1,6 @@
+"""
+Servicios de aplicación
+
+Contiene la lógica de orquestación y coordinación entre entidades de dominio.
+Los servicios implementan los casos de uso del sistema.
+"""

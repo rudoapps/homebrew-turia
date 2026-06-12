@@ -1,0 +1,6 @@
+"""
+Adaptadores de base de datos
+
+Implementaciones de repositorios usando Django ORM.
+Incluye mappers, modelos de base de datos (DBOs) y lógica de persistencia.
+"""

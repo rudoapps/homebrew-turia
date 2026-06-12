@@ -1,0 +1,6 @@
+import retrofit2.http.*
+
+interface {{TEMPLATE_NAME}}RemoteDataSource {
+    @GET("{{PARAM_NAME}}s")
+    suspend fun getAll{{TEMPLATE_NAME}}s(): List<{{TEMPLATE_NAME}}Dto>
+}

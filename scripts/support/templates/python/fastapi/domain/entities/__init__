@@ -1,0 +1,6 @@
+"""
+Entidades de dominio
+
+Contiene las entidades del modelo de dominio implementadas con Pydantic.
+Estas entidades representan los conceptos centrales del negocio.
+"""

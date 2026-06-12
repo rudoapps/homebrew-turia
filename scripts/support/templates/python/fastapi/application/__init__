@@ -1,0 +1,6 @@
+"""
+Capa de aplicación - Casos de uso y orquestación
+
+Esta capa contiene los servicios de aplicación, puertos (interfaces)
+y la lógica de orquestación del negocio.
+"""

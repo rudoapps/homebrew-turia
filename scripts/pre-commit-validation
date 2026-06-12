@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Pre-commit hook para validar archivos .gula
+#
+# Para instalar este hook:
+# 1. Copia este archivo a .git/hooks/pre-commit
+# 2. Dale permisos de ejecución: chmod +x .git/hooks/pre-commit
+#
+# Alternativamente, usa: gula install-hook
+# O si usas un gestor de hooks como husky o pre-commit,
+# puedes configurarlo para ejecutar: gula validate --staged
+#
+
+echo "🔍 Validando archivos .gula..."
+echo ""
+
+# Verificar si gula está disponible
+if ! command -v gula >/dev/null 2>&1; then
+    echo "⚠️  Advertencia: gula no está instalado o no está en el PATH"
+    echo "Saltando validación de archivos .gula"
+    exit 0
+fi
+
+# Ejecutar validación de archivos en staging
+gula validate --staged
+
+# Capturar el código de salida
+validation_result=$?
+
+if [ $validation_result -ne 0 ]; then
+    echo ""
+    echo "❌ Pre-commit hook falló: Hay errores en los archivos .gula"
+    echo "Por favor corrige los errores antes de hacer commit"
+    exit 1
+fi
+
+echo ""
+echo "✅ Validación de archivos .gula completada"
+exit 0

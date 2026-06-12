@@ -1,0 +1,9 @@
+import javax.inject.Inject
+
+class GetAll{{TEMPLATE_NAME}}sUseCase @Inject constructor(
+    private val repository: {{TEMPLATE_NAME}}Repository
+) {
+    suspend operator fun invoke(): List<{{TEMPLATE_NAME}}> {
+        return repository.getAll{{TEMPLATE_NAME}}s()
+    }
+}

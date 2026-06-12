@@ -1,0 +1,7 @@
+import '../../entities/{{PARAM_NAME}}/{{PARAM_NAME}}_entity.dart';
+
+abstract interface class {{TEMPLATE_NAME}}Repository {
+  Future<{{TEMPLATE_NAME}}Entity> get{{TEMPLATE_NAME}}();
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}Entity entity});
+  Future<List<{{TEMPLATE_NAME}}Entity>> getAll{{TEMPLATE_NAME}}s();
+}

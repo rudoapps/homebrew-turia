@@ -1,0 +1,6 @@
+"""
+Capa de dominio - Núcleo del negocio
+
+Esta capa contiene las entidades de dominio y la lógica de negocio pura,
+sin dependencias externas.
+"""

@@ -1,0 +1,79 @@
+import 'package:injectable/injectable.dart';
+
+import '../../../domain/entities/{{PARAM_NAME}}/{{PARAM_NAME}}_entity.dart';
+import '../../../domain/repositories/{{PARAM_NAME}}/{{PARAM_NAME}}_repository.dart';
+import '../../../../core/exceptions/handler/app_exception_handler.dart';
+import '../../datasources/{{PARAM_NAME}}/source/{{PARAM_NAME}}_local_data_source.dart';
+import '../../datasources/{{PARAM_NAME}}/source/{{PARAM_NAME}}_remote_data_source.dart';
+import 'mapper/{{PARAM_NAME}}_mapper_dbo.dart';
+import 'mapper/{{PARAM_NAME}}_mapper_dto.dart';
+
+@Injectable(as: {{TEMPLATE_NAME}}Repository)
+class {{TEMPLATE_NAME}}RepositoryImpl implements {{TEMPLATE_NAME}}Repository {
+  final {{TEMPLATE_NAME}}RemoteDataSource _remoteDataSource;
+  final {{TEMPLATE_NAME}}LocalDataSource _localDataSource;
+  final {{TEMPLATE_NAME}}MapperDto _mapperDto;
+  final {{TEMPLATE_NAME}}MapperDbo _mapperDbo;
+  final AppExceptionHandler _exceptionHandler;
+
+  {{TEMPLATE_NAME}}RepositoryImpl({
+    required {{TEMPLATE_NAME}}RemoteDataSource remoteDataSource,
+    required {{TEMPLATE_NAME}}LocalDataSource localDataSource,
+    required {{TEMPLATE_NAME}}MapperDto mapperDto,
+    required {{TEMPLATE_NAME}}MapperDbo mapperDbo,
+    required AppExceptionHandler exceptionHandler,
+  })  : _remoteDataSource = remoteDataSource,
+        _localDataSource = localDataSource,
+        _mapperDto = mapperDto,
+        _mapperDbo = mapperDbo,
+        _exceptionHandler = exceptionHandler;
+
+  @override
+  Future<{{TEMPLATE_NAME}}Entity> get{{TEMPLATE_NAME}}() async {
+    try {
+      final dto = await _remoteDataSource.fetch{{TEMPLATE_NAME}}();
+      final entity = _mapperDto.fromDto(dto);
+
+      // Save to local cache
+      final dbo = _mapperDbo.toDbo(entity);
+      await _localDataSource.save{{TEMPLATE_NAME}}(dbo: dbo);
+
+      return entity;
+    } catch (e) {
+      throw _exceptionHandler.handle(
+        exception: e,
+        stackTrx: StackTrace.current,
+      );
+    }
+  }
+
+  @override
+  Future<void> save{{TEMPLATE_NAME}}({required {{TEMPLATE_NAME}}Entity entity}) async {
+    try {
+      final dto = _mapperDto.toDto(entity);
+      await _remoteDataSource.save{{TEMPLATE_NAME}}(dto: dto);
+
+      // Update local cache
+      final dbo = _mapperDbo.toDbo(entity);
+      await _localDataSource.save{{TEMPLATE_NAME}}(dbo: dbo);
+    } catch (e) {
+      throw _exceptionHandler.handle(
+        exception: e,
+        stackTrx: StackTrace.current,
+      );
+    }
+  }
+
+  @override
+  Future<List<{{TEMPLATE_NAME}}Entity>> getAll{{TEMPLATE_NAME}}s() async {
+    try {
+      // TODO: Implement getAll logic
+      throw UnimplementedError('getAll{{TEMPLATE_NAME}}s not implemented yet');
+    } catch (e) {
+      throw _exceptionHandler.handle(
+        exception: e,
+        stackTrx: StackTrace.current,
+      );
+    }
+  }
+}

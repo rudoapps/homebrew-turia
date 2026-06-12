@@ -1,0 +1,13 @@
+from typing import List
+from sqlalchemy.orm import Session
+from repositories.{{PARAM_NAME}}_repository import {{TEMPLATE_NAME}}Repository
+from schemas.{{PARAM_NAME}} import {{TEMPLATE_NAME}}Response
+
+
+class {{TEMPLATE_NAME}}Service:
+    def __init__(self, db: Session):
+        self.repository = {{TEMPLATE_NAME}}Repository(db)
+
+    def get_all_{{PARAM_NAME}}s(self, skip: int = 0, limit: int = 100) -> List[{{TEMPLATE_NAME}}Response]:
+        {{PARAM_NAME}}s = self.repository.get_all(skip=skip, limit=limit)
+        return [{{TEMPLATE_NAME}}Response.from_orm({{PARAM_NAME}}) for {{PARAM_NAME}} in {{PARAM_NAME}}s]

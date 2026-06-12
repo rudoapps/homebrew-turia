@@ -1,0 +1,21 @@
+import 'package:injectable/injectable.dart';
+
+import '../../../../domain/entities/{{PARAM_NAME}}/{{PARAM_NAME}}_entity.dart';
+import '../../../datasources/{{PARAM_NAME}}/local/dbo/{{PARAM_NAME}}_dbo.dart';
+
+@Injectable()
+class {{TEMPLATE_NAME}}MapperDbo {
+  {{TEMPLATE_NAME}}Entity fromDbo({{TEMPLATE_NAME}}Dbo dbo) {
+    return {{TEMPLATE_NAME}}Entity(
+      id: dbo.id,
+      name: dbo.name,
+    );
+  }
+
+  {{TEMPLATE_NAME}}Dbo toDbo({{TEMPLATE_NAME}}Entity entity) {
+    return {{TEMPLATE_NAME}}Dbo(
+      id: entity.id,
+      name: entity.name,
+    );
+  }
+}

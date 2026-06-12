@@ -1,0 +1,3 @@
+protocol {{TEMPLATE_NAME}}RepositoryProtocol {
+    func get{{TEMPLATE_NAME}}s() async throws -> [{{TEMPLATE_NAME}}]
+}

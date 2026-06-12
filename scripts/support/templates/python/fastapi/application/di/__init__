@@ -1,0 +1,6 @@
+"""
+Inyección de dependencias
+
+Configuración y funciones para la inyección de dependencias.
+Maneja la creación e inyección de servicios y adaptadores.
+"""

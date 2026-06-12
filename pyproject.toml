@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "turia"
+dynamic = ["version"]
+description = "CLI para el agente de IA de Turia"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+    "httpx>=0.25",
+    "prompt-toolkit>=3.0",
+    "rich>=13.0",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+turia-ai = "turia_chat.__main__:main"
+
+[tool.hatch.version]
+path = "VERSION"
+pattern = "(?P<version>.+)"
+
+[tool.hatch.build.targets.wheel]
+packages = ["scripts/agent/turia_chat"]

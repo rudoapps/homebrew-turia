@@ -1,0 +1,23 @@
+class {{TEMPLATE_NAME}}ResponseDto {
+  final String id;
+  final String name;
+
+  {{TEMPLATE_NAME}}ResponseDto({
+    required this.id,
+    required this.name,
+  });
+
+  factory {{TEMPLATE_NAME}}ResponseDto.fromJson(Map<String, dynamic> json) {
+    return {{TEMPLATE_NAME}}ResponseDto(
+      id: json['id'] as String,
+      name: json['name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}

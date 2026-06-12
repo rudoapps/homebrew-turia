@@ -1,0 +1,23 @@
+class {{TEMPLATE_NAME}}Dbo {
+  final String id;
+  final String name;
+
+  {{TEMPLATE_NAME}}Dbo({
+    required this.id,
+    required this.name,
+  });
+
+  factory {{TEMPLATE_NAME}}Dbo.fromMap(Map<String, dynamic> map) {
+    return {{TEMPLATE_NAME}}Dbo(
+      id: map['id'] as String,
+      name: map['name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}
